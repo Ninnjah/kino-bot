@@ -27,7 +27,7 @@ class KinopoiskAPI:
             name_ru=raw_film.get("nameRu"),
             name_en=raw_film.get("nameEn"),
             type=FilmType(raw_film["type"]) if raw_film["type"] else None,
-            year=raw_film.get("year"),
+            year=raw_film.get("year") if raw_film.get("year") != "null" else None,
             description=raw_film.get("description"),
             film_length=raw_film.get("filmLength"),
             countries=[country["country"] for country in raw_film.get("countries", [])],
