@@ -32,7 +32,7 @@ class KinopoiskAPI:
             film_length=raw_film.get("filmLength"),
             countries=[country["country"] for country in raw_film.get("countries", [])],
             genres=[genre["genre"] for genre in raw_film.get("genres", [])],
-            rating=raw_film.get("rating"),
+            rating=raw_film.get("rating") if raw_film.get("rating") != "null" else "0.0",
             rating_vote_count=raw_film.get("ratingVoteCount"),
             poster_url=raw_film.get("posterUrl"),
             poster_url_preview=raw_film.get("posterUrlPreview"),
