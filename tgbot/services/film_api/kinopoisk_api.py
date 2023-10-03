@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from aiocache import cached
+from aiocache import cached, RedisCache
 from aiocache.serializers import PickleSerializer
 from httpx import AsyncClient
 
@@ -87,7 +87,7 @@ class KinopoiskAPI:
             web_url=raw_film.get("web_url"),
         )
 
-    @cached(ttl=10, serializer=PickleSerializer(), namespace="cache")
+    @cached(ttl=43200, cache=RedisCache, serializer=PickleSerializer(), namespace="cache")
     async def films_search_by_keyword(self, keyword: str, page: int = 1) -> Optional[Search]:
         params = {
             "keyword": keyword,
@@ -105,7 +105,7 @@ class KinopoiskAPI:
                     films=[self._parse_film(x) for x in data.get("films")],
                 )
 
-    @cached(ttl=10, serializer=PickleSerializer(), namespace="cache")
+    @cached(ttl=43200, cache=RedisCache, serializer=PickleSerializer(), namespace="cache")
     async def film(self, film_id: int) -> Optional[DetailFilm]:
         async with AsyncClient(headers=self.headers) as client:
             res = await client.get(f"{self._films}/{film_id}")
