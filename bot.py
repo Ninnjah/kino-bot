@@ -18,6 +18,8 @@ from tgbot.middlewares.media_group import AlbumMiddleware
 from tgbot.middlewares.db import DbMiddleware
 from tgbot.middlewares.role import RoleMiddleware
 from tgbot.database.tables import Base
+from tgbot.services.film_api.kinopoisk_api import KinopoiskAPI
+from tgbot.services.film_api.player_api import PlayerAPI
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +53,8 @@ async def main():
 
     dp["admin_list"] = config.admin_list
     dp["l10n"] = get_fluent_localization()
+    dp["kinopoisk"] = KinopoiskAPI(config.kinopoisk_token.get_secret_value())
+    dp["player"] = PlayerAPI(config.player_token.get_secret_value())
 
     dp.message.middleware(AlbumMiddleware())
 

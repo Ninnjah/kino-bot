@@ -27,6 +27,8 @@ class Settings(BaseSettings):
     admin_list: List[int]
     database_url: PostgresDsn
     use_redis: bool
+    kinopoisk_token: SecretStr
+    player_token: SecretStr
 
     @classmethod
     def settings_customise_sources(

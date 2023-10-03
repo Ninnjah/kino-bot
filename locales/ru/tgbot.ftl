@@ -34,3 +34,5 @@ user-start-text = Добро пожаловать!
 yesno-button-text-yes = Да
 yesno-button-text-no = Нет
 cancel-button-text = Отмена
+search-button-text = {$title} ({$year}) ⭐️{$rating}
+search-message-text = Вот список доступных фильмов по запросу "{$request}"
