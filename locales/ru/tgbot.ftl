@@ -36,3 +36,8 @@ yesno-button-text-no = Нет
 cancel-button-text = Отмена
 search-button-text = {$title} ({$year}) ⭐️{$rating}
 search-message-text = Вот список доступных фильмов по запросу "{$request}"
+film-message-text =
+    {$title} ({$year}) ⭐️{$rating}
+    Жанры: {$genres}
+serial-season-url-button-text = Сезон {$number}
+film-url-button-text = Смотреть онлайн

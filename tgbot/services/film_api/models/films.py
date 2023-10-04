@@ -6,8 +6,11 @@ from pydantic import BaseModel, AnyUrl
 
 class FilmType(str, Enum):
     FILM = "FILM"
+    film = "film"
     TV_SHOW = "TV_SHOW"
     TV_SERIES = "TV_SERIES"
+    SERIES = "series"
+    CARTOON_SERIES = "cartoon-series"
     MINI_SERIES = "MINI_SERIES"
     VIDEO = "VIDEO"
     UNKNOWN = "UNKNOWN"
@@ -58,6 +61,10 @@ class DetailFilm(Film):
     seasons: Optional[List[Season]] = None
     slogan: Optional[str] = None
     web_url: Optional[AnyUrl] = None
+
+
+class Serial(Film):
+    seasons: Optional[List[Season]] = None
 
 
 class Search(BaseModel):
