@@ -1,14 +1,9 @@
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import String, DateTime, BigInteger, Boolean, func
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy.ext.asyncio import AsyncAttrs
+from sqlalchemy import String, DateTime, BigInteger, func
+from sqlalchemy.orm import Mapped, mapped_column
 
-
-class Base(AsyncAttrs, DeclarativeBase):
-    def __repr__(self):
-        params = {x: self.__getattribute__(x) for x in self.__dict__ if not x.startswith('_')}
-        return self.__class__.__name__ + "(" + ", ".join(f"{key}={value}" for key, value in params.items()) + ")"
+from .base import Base
 
 
 class User(Base):

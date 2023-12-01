@@ -1,14 +1,14 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 from pydantic import BaseModel, AnyUrl
 
 
 class Episode(BaseModel):
-    number: str
+    number: Union[int, str]
     url: Optional[AnyUrl] = None
 
 
 class Season(BaseModel):
-    number: int
+    number: Union[int, str]
     episodes: List[Episode]
     url: AnyUrl
 
