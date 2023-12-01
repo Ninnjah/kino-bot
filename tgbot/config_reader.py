@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     admin_list: List[int]
     database_url: PostgresDsn
     use_redis: bool
+    redis_prefix: str
     kinopoisk_token: SecretStr
     player_token: SecretStr
 

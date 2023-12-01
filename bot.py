@@ -43,7 +43,7 @@ async def main():
     logger.error("Starting bot")
 
     if config.use_redis:
-        storage = RedisStorage(redis.Redis(), key_builder=DefaultKeyBuilder(with_destiny=True))
+        storage = RedisStorage(redis.Redis(), key_builder=DefaultKeyBuilder(prefix=config.redis_prefix, with_destiny=True))
     else:
         storage = MemoryStorage()
 
