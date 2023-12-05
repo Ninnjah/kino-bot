@@ -36,8 +36,11 @@ yesno-button-text-no = Нет
 cancel-button-text = Отмена
 search-button-text = {$title} ({$year}) ⭐️{$rating}
 search-message-text = Вот список доступных фильмов по запросу "{$request}"
+search-not-found-text = Похоже, что по вашему запросу ничего не найдено
 film-message-text =
     {$title} ({$year}) ⭐️{$rating}
     Жанры: {$genres}
 serial-season-url-button-text = Сезон {$number}
-film-url-button-text = Смотреть онлайн
+film-url-button-text = Смотреть онлайн [{$title}]
+film-not-found-text = Похоже, что этого фильма больше нет
+error-handler-text = Упс! Что-то пошло не так

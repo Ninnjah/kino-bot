@@ -16,6 +16,12 @@ class FilmType(str, Enum):
     UNKNOWN = "UNKNOWN"
 
 
+class Source(BaseModel):
+    film_id: int
+    title: str
+    url: AnyUrl
+
+
 class Episode(BaseModel):
     episode_number: int
     season_number: int
@@ -44,6 +50,7 @@ class Film(BaseModel):
     rating_vote_count: Optional[int] = None
     poster_url: Optional[AnyUrl] = None
     poster_url_preview: Optional[AnyUrl] = None
+    source: Optional[List[Source]] = None
 
 
 class DetailFilm(Film):

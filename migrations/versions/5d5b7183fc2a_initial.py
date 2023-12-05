@@ -26,22 +26,6 @@ def upgrade() -> None:
     sa.Column('updated_on', sa.DateTime(), nullable=False),
     sa.PrimaryKeyConstraint('user_id')
     )
-    op.create_table('films',
-    sa.Column('film_id', sa.BigInteger(), nullable=False),
-    sa.Column('name_ru', sa.String(), nullable=True),
-    sa.Column('name_en', sa.String(), nullable=True),
-    sa.Column('year', sa.Integer(), nullable=True),
-    sa.Column('description', sa.String(), nullable=True),
-    sa.Column('film_length', sa.String(), nullable=True),
-    sa.Column('countries', sa.ARRAY(sa.String()), nullable=True),
-    sa.Column('genres', sa.ARRAY(sa.String()), nullable=True),
-    sa.Column('rating', sa.String(), nullable=True),
-    sa.Column('poster_url', sa.String(), nullable=True),
-    sa.Column('url', sa.String(), nullable=True),
-    sa.Column('created_on', sa.DateTime(), nullable=False),
-    sa.Column('updated_on', sa.DateTime(), nullable=False),
-    sa.PrimaryKeyConstraint('film_id')
-    )
     op.create_table('users',
     sa.Column('user_id', sa.BigInteger(), nullable=False),
     sa.Column('firstname', sa.String(), nullable=False),
