@@ -19,7 +19,7 @@ from tgbot.middlewares.db import DbMiddleware
 from tgbot.middlewares.role import RoleMiddleware
 from tgbot.database.tables import Base
 from tgbot.services.film_api.kinopoisk_api import KinopoiskAPI
-from tgbot.services.film_api.player_api import VoidboostPlayer, IframePlayer
+from tgbot.services.film_api.player_api import VoidboostPlayer, IframePlayer, AllohaPlayer
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +56,8 @@ async def main():
     dp["kinopoisk"] = KinopoiskAPI(config.kinopoisk_token.get_secret_value())
     dp["players"] = [
         VoidboostPlayer(), 
-        IframePlayer()
+        IframePlayer(),
+        AllohaPlayer(),
     ]
 
     dp.message.middleware(AlbumMiddleware())

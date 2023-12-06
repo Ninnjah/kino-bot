@@ -121,3 +121,39 @@ class IframePlayer(BasePlayer):
                 ]
             )
             return [x for x in res if x]
+
+
+class AllohaPlayer(BasePlayer):
+    def __init__(self):
+        self.title = "alloha"
+        self.token = "04941a9a3ca3ac16e2b4327347bbc1"
+        self.base_url = "https://api.alloha.tv"
+    
+    @staticmethod
+    async def _parse_url(raw_data: dict) -> Optional[str]:
+        try:
+            return raw_data["data"]["iframe"]
+        except (IndexError, TypeError):
+            return
+    
+    async def _get_source(self, client: AsyncClient, url: str, film: films.Film) -> Optional[Source]:
+        res = await self._request_get(client, url, params={"token": self.token, "kp": film.film_id})
+        if res.status_code == 200:
+            data = res.json()
+            if data["status"] != "success":
+                return
+            return Source(title=self.title, film_id=film.film_id, url=await self._parse_url(res.json()))
+    
+    async def get_source(self, film: films.Film) -> Optional[Source]:
+        async with AsyncClient() as client:
+            return await self._get_source(client, url=self.base_url, film=film)
+    
+    async def get_bunch_source(self, film_list: List[films.Film]) -> List[Source]:
+        async with AsyncClient() as client:
+            res = await asyncio.gather(
+                *[
+                    self._get_source(client, url=self.base_url, film=film)
+                    for film in film_list
+                ]
+            )
+            return [x for x in res if x]
