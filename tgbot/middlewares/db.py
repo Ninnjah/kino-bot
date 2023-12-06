@@ -21,6 +21,7 @@ class DbMiddleware(BaseMiddleware):
         async with self.pool.connect() as db:
             repo = Repo(db)
             data["repo"] = repo
+            data["pool"] = self.pool
 
             result = await handler(event, data)
 

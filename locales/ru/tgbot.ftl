@@ -34,6 +34,7 @@ user-start-text = Чтобы найти фильм просто отправьт
 yesno-button-text-yes = Да
 yesno-button-text-no = Нет
 cancel-button-text = Отмена
+search-wait-text = Подожди пожалуйста, я ищу фильм
 search-button-text = {$title} ({$year}) ⭐️{$rating}
 search-message-text = Вот список доступных фильмов по запросу "{$request}"
 search-not-found-text = Похоже, что по вашему запросу ничего не найдено
