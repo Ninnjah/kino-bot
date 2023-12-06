@@ -21,7 +21,6 @@ class BasePlayer:
 
     @staticmethod
     @cached(ttl=3600, cache=RedisCache, serializer=PickleSerializer(), namespace="cache")
-    @abstractmethod
     async def _request_get(
             client: AsyncClient, url: str, params: Optional[dict] = None, attempts: int = 5
     ) -> Optional[Response]:
@@ -49,6 +48,10 @@ class BasePlayer:
         ...
     
     @abstractmethod
+    async def _get_source(self, client: AsyncClient, url: str, film: films.Film) -> Optional[Source]:
+        ...
+    
+    @abstractmethod
     async def get_source(self, film: films.Film) -> Optional[Source]:
         ...
     
@@ -66,6 +69,11 @@ class VoidboostPlayer(BasePlayer):
     async def _parse_url(raw_data: dict) -> Optional[str]:
         ...
     
+    async def _get_source(self, client: AsyncClient, url: str, film: films.Film) -> Optional[Source]:
+        res = await self._request_get(client, url)
+        if res.status_code == 200:
+            return Source(title=self.title, film_id=film.film_id, url=str(res.request.url))
+    
     async def get_source(self, film: films.Film) -> Optional[Source]:
         async with AsyncClient() as client:
             res = await self._request_get(client, f"{self.base_url}/embed/{film.film_id}")
@@ -73,29 +81,20 @@ class VoidboostPlayer(BasePlayer):
                 return Source(title=self.title, film_id=film.film_id, url=str(res.request.url))
     
     async def get_bunch_source(self, film_list: List[films.Film]) -> List[Source]:
-        try:
-            async with AsyncClient() as client:
-                r = await asyncio.gather(
-                    *[
-                        self._request_get(client, f"{self.base_url}/embed/{film.film_id}")
-                        for film in film_list
-                    ]
-                )
-                return [
-                    Source(title=self.title, film_id=x.request.url.path.split("/")[-1], url=str(x.request.url))
-                    for x in r if x.status_code == 200 if x
+        async with AsyncClient() as client:
+            res = await asyncio.gather(
+                *[
+                    self._get_source(client, url=f"{self.base_url}/embed/{film.film_id}", film=film)
+                    for film in film_list
                 ]
-
-        except (ReadTimeout, ConnectTimeout, ConnectError) as e:
-            logger.warning(f"{e}\nWaiting of {BasePlayer.TIMEOUT} seconds", exc_info=True)
-            await asyncio.sleep(BasePlayer.TIMEOUT)
-            return await self.check_available(film_list)
+            )
+            return [x for x in res if x]
 
 
 class IframePlayer(BasePlayer):
     def __init__(self):
         self.title = "iframe"
-        self.base_url = "https://iframe.video/api/v2"
+        self.base_url = "https://iframe.video/api/v2/search"
     
     @staticmethod
     async def _parse_url(raw_data: dict) -> Optional[str]:
@@ -104,29 +103,21 @@ class IframePlayer(BasePlayer):
         except (IndexError, TypeError):
             return
     
-    @abstractmethod
+    async def _get_source(self, client: AsyncClient, url: str, film: films.Film) -> Optional[Source]:
+        res = await self._request_get(client, url, params={"kp": film.film_id})
+        if res.status_code == 200:
+            return Source(title=self.title, film_id=film.film_id, url=await self._parse_url(res.json()))
+    
     async def get_source(self, film: films.Film) -> Optional[Source]:
         async with AsyncClient() as client:
-            res = await self._request_get(client, f"{self.base_url}/search", params={"kp": film.film_id})
-            if res.status_code == 200:
-                return Source(title=self.title, film_id=film.film_id, url=await self._parse_url(res.json()))
+            return await self._get_source(client, url=f"{self.base_url}/search", film=film)
     
     async def get_bunch_source(self, film_list: List[films.Film]) -> List[Source]:
-        try:
-            async with AsyncClient() as client:
-                r = await asyncio.gather(
-                    *[
-                        self._request_get(client, f"{self.base_url}/search", params={"kp": film.film_id})
-                        for film in film_list
-                    ]
-                )
-                
-                return [
-                    Source(title=self.title, film_id=x.request.url.params["kp"], url=await self._parse_url(x.json()))
-                    for x in r if x.status_code == 200 if x and x.json()["results"]
+        async with AsyncClient() as client:
+            res = await asyncio.gather(
+                *[
+                    self._get_source(client, url=f"{self.base_url}/search", film=film)
+                    for film in film_list
                 ]
-
-        except (ReadTimeout, ConnectTimeout, ConnectError) as e:
-            logger.warning(f"{e}\nWaiting of {BasePlayer.TIMEOUT} seconds", exc_info=True)
-            await asyncio.sleep(BasePlayer.TIMEOUT)
-            return await self.check_available(film_list)
+            )
+            return [x for x in res if x]
