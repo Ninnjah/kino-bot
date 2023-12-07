@@ -1,7 +1,6 @@
 import asyncio
-from typing import List
 
-from aiogram import Router, F, flags
+from aiogram import Router, F
 from aiogram.types import CallbackQuery, Message, URLInputFile
 from aiogram.utils.chat_action import ChatActionSender
 
@@ -13,8 +12,7 @@ from sqlalchemy.ext.asyncio.engine import AsyncEngine
 from tgbot.keyboard.inline import url_kb
 from tgbot.keyboard.inline.user import search_kb
 from tgbot.services.repository import Repo
-from tgbot.services.film_api.kinopoisk_api import KinopoiskAPI
-from tgbot.services.film_api.player_api import BasePlayer
+from tgbot.services.film_api import KinopoiskAPI, players
 from tgbot.services.film_api.models.films import Search
 
 router = Router(name=__name__)
@@ -24,24 +22,33 @@ async def search_films(
     m: Message, 
     l10n: FluentLocalization,
     pool: AsyncEngine, 
-    search: Search, 
-    players: List[BasePlayer]
+    search: Search,
 ):
+    players_count = len(players)
     async with ChatActionSender.typing(bot=m.bot, chat_id=m.chat.id):
         async with pool.connect() as conn:
             repo = Repo(conn)
-            available_films = await repo.list_films()
-            needed_films = [x for x in search.films if x.film_id not in [y.film_id for y in available_films]]
+            available_films = await repo.list_films([x.film_id for x in search.films])
+            needed_films = [
+                x for x in available_films
+                if any((
+                    any([x.film_id == y.film_id for y in search.films]),
+                    len(x.source) < players_count if x.source else False,
+                ))
+            ]
             await repo.add_film(search.films)
             
-            if needed_films:
-                for player in players:
-                    sources = await player.get_bunch_source([
-                        x for x in needed_films if not x.source or (x.source and x.source.title != player.title)
-                    ])
-                    available_films += [x for x in search.films if x.film_id in [y.film_id for y in sources]]
-                    if sources:
-                        await repo.add_source(sources)
+            for player in players:
+                needed_source = [
+                    x for x in needed_films 
+                    if not x.source 
+                    or player.title not in [y.title for y in x.source]
+                ]
+                
+                sources = await player.get_bunch_source(needed_source)
+                available_films += [x for x in search.films if x.film_id in [y.film_id for y in sources]]
+                if sources:
+                    await repo.add_source(sources)
 
             available_films = await repo.search_films([film.film_id for film in search.films])
             films = [x for x in search.films if x.film_id in [y.film_id for y in available_films]]
@@ -57,8 +64,7 @@ async def search_film_handler(
     l10n: FluentLocalization,
     repo: Repo, 
     pool: AsyncEngine,
-    kinopoisk: KinopoiskAPI, 
-    players: List[BasePlayer]
+    kinopoisk: KinopoiskAPI,
 ):
     await m.bot.send_chat_action(m.chat.id, "typing")
 
@@ -68,7 +74,7 @@ async def search_film_handler(
         return
 
     msg = await m.answer(l10n.format_value("search-wait-text"))
-    asyncio.create_task(search_films(m=msg, l10n=l10n, pool=pool, search=search, players=players))
+    asyncio.create_task(search_films(m=msg, l10n=l10n, pool=pool, search=search))
 
 
 @router.callback_query(search_kb.SearchCallback.filter())
@@ -77,7 +83,6 @@ async def film_handler(
     callback_data: search_kb.SearchCallback, 
     l10n: FluentLocalization, 
     repo: Repo,
-    players: List[BasePlayer],
 ):
     await callback.answer()
     film = await repo.get_film(callback_data.film_id)

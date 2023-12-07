@@ -186,11 +186,26 @@ class Repo:
             logger.warning(f"GET_FILM {e}", exc_info=True)
             return
 
-    async def list_films(self) -> Sequence[FilmModel]:
-        stmt = select(Film).order_by(Film.created_on)
+    async def list_films(self, films_id: Optional[Sequence[int]] = None) -> Sequence[FilmModel]:
+        if films_id:
+            stmt = select(Film).where(Film.film_id.in_(films_id)).order_by(Film.created_on)
+        else:
+            stmt = select(Film).order_by(Film.created_on)
+        source_stmt = select(Source).where(Source.film_id.in_(films_id))
 
         res = await self.conn.execute(stmt)
-        return [FilmModel.model_validate(film) for film in res.mappings().all()]
+        source_res = await self.conn.execute(source_stmt)
+        
+        films = []
+        raw_films = [FilmModel.model_validate(film) for film in res.mappings().all()]
+        sources = [SourceModel.model_validate(source) for source in source_res.mappings().all()]
+        for film in raw_films:
+            source = list(filter(lambda x: x.film_id == film.film_id, sources))
+            if source:
+                film.source = source
+            films.append(film)
+        
+        return films
 
     async def search_films(self, films_id: Sequence[int]) -> Sequence[FilmModel]:
         stmt = (
