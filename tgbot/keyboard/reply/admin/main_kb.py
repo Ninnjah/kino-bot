@@ -13,5 +13,6 @@ def get(l10n: FluentLocalization):
             KeyboardButton(text=l10n.format_value("admin-add-admin-button-text")),
             KeyboardButton(text=l10n.format_value("admin-delete-admin-button-text")),
         ],
+        [KeyboardButton(text=l10n.format_value("admin-list-players-button-text"))],
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)

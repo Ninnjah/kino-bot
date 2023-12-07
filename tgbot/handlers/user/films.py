@@ -12,7 +12,8 @@ from sqlalchemy.ext.asyncio.engine import AsyncEngine
 from tgbot.keyboard.inline import url_kb
 from tgbot.keyboard.inline.user import search_kb
 from tgbot.services.repository import Repo
-from tgbot.services.film_api import KinopoiskAPI, players
+from tgbot.services.film_api import KinopoiskAPI
+from tgbot.services.film_api import players as players_
 from tgbot.services.film_api.models.films import Search
 
 router = Router(name=__name__)
@@ -24,10 +25,13 @@ async def search_films(
     pool: AsyncEngine, 
     search: Search,
 ):
-    players_count = len(players)
     async with ChatActionSender.typing(bot=m.bot, chat_id=m.chat.id):
         async with pool.connect() as conn:
             repo = Repo(conn)
+            players_conf = [x.title for x in await repo.list_players() if x.is_active]
+            players = [x for x in players_ if x.title in players_conf]
+            players_count = len(players)
+            
             available_films = await repo.list_films([x.film_id for x in search.films])
             needed_films = [
                 x for x in available_films

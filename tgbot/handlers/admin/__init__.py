@@ -5,6 +5,7 @@ from tgbot.models.role import UserRole
 
 from . import start
 from . import admins
+from . import players
 from . import users
 
 __all__ = (
@@ -18,5 +19,6 @@ router.callback_query.filter(RoleFilter(UserRole.ADMIN))
 router.include_routers(
     start.router,
     admins.router,
+    players.router,
     users.router,
 )

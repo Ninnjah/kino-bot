@@ -5,6 +5,8 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
 
+from aiogram_dialog import setup_dialogs
+
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.pool import AsyncAdaptedQueuePool
@@ -17,8 +19,8 @@ from tgbot.handlers import admin, user
 from tgbot.middlewares.media_group import AlbumMiddleware
 from tgbot.middlewares.db import DbMiddleware
 from tgbot.middlewares.role import RoleMiddleware
-from tgbot.database.tables import Base
-from tgbot.services.film_api import KinopoiskAPI
+from tgbot.services.film_api import KinopoiskAPI, players
+from tgbot.services.repository import Repo
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +31,8 @@ async def create_pool(db_url: str, echo: bool = False) -> AsyncEngine:
     )
 
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        repo = Repo(conn)
+        await repo.init_players([x.title for x in players])
 
     return engine
 
@@ -65,6 +68,8 @@ async def main():
         admin.router,
         user.router,
     )
+    
+    setup_dialogs(dp)
 
     await bot.delete_webhook(drop_pending_updates=True)
     # start

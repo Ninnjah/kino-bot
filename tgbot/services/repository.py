@@ -3,7 +3,7 @@ from typing import Optional, Sequence, Union
 
 from pydantic import ValidationError
 
-from sqlalchemy import select, delete, bindparam
+from sqlalchemy import select, delete, bindparam, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import DatabaseError
 from sqlalchemy.ext.asyncio.engine import AsyncConnection
@@ -11,6 +11,7 @@ from sqlalchemy.engine.row import RowMapping
 
 from tgbot.database.tables import User, Admin
 from tgbot.database.films import Film, Source
+from tgbot.database.admin import Player
 
 from tgbot.services.film_api.models.films import Film as FilmModel
 from tgbot.services.film_api.models.films import Source as SourceModel
@@ -242,3 +243,22 @@ class Repo:
         await self.conn.execute(stmt, [source.model_dump(mode="json") for source in source_list])
         await self.conn.commit()
         return
+
+    # players
+    async def init_players(self, players: Sequence[str]) -> None:
+        stmt = insert(Player).values(title=bindparam("title")).on_conflict_do_nothing()
+        
+        await self.conn.execute(stmt, [{"title": x} for x in players])
+        await self.conn.commit()
+    
+    async def toggle_player(self, player_title: str, is_active: bool) -> None:
+        stmt = update(Player).where(Player.title == player_title).values(is_active=is_active)
+        
+        await self.conn.execute(stmt)
+        await self.conn.commit()
+    
+    async def list_players(self) -> Sequence[RowMapping]:
+        stmt = select(Player).order_by(Player.title)
+        
+        res = await self.conn.execute(stmt)
+        return res.mappings().all()
