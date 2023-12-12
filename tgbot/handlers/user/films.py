@@ -43,6 +43,11 @@ async def search_films(
                     )
                 )
             ]
+            needed_films += [
+                x
+                for x in search.films
+                if x.film_id not in [y.film_id for y in needed_films]
+            ]
             await repo.add_film(search.films)
 
             for player in players:
