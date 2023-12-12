@@ -127,10 +127,14 @@ class IframePlayer(BasePlayer):
         res = await self._request_get(client, url, params={"kp": film.film_id})
         if res.status_code == 200:
             data = res.json()
+            source_url = await self._parse_url(data)
+            if not source_url:
+                return
+
             return Source(
                 title=self.title,
                 film_id=film.film_id,
-                url=await self._parse_url(data),
+                url=source_url,
             )
 
     async def get_source(self, film: films.Film) -> Optional[Source]:
@@ -174,11 +178,14 @@ class AllohaPlayer(BasePlayer):
             data = res.json()
             if data["status"] != "success":
                 return
+            source_url = await self._parse_url(data)
+            if not source_url:
+                return
 
             return Source(
                 title=self.title,
                 film_id=film.film_id,
-                url=await self._parse_url(data),
+                url=source_url,
             )
 
     async def get_source(self, film: films.Film) -> Optional[Source]:
@@ -220,11 +227,14 @@ class BhceshPlayer(BasePlayer):
             data = res.json()
             if data.get("status") == 404:
                 return
+            source_url = await self._parse_url(data)
+            if not source_url:
+                return
 
             return Source(
                 title=self.title,
                 film_id=film.film_id,
-                url=await self._parse_url(data),
+                url=source_url,
             )
 
     async def get_source(self, film: films.Film) -> Optional[Source]:
@@ -266,9 +276,14 @@ class CollapsPlayer(BasePlayer):
             data = res.json()
             if data["total"] == 0:
                 return
+            source_url = await self._parse_url(data)
+            if not source_url:
+                return
 
             return Source(
-                title=self.title, film_id=film.film_id, url=await self._parse_url(data)
+                title=self.title,
+                film_id=film.film_id,
+                url=source_url,
             )
 
     async def get_source(self, film: films.Film) -> Optional[Source]:
