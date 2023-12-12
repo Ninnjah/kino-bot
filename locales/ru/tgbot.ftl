@@ -42,8 +42,12 @@ search-button-text = {$title} ({$year}) ⭐️{$rating}
 search-message-text = Вот список доступных фильмов по запросу "{$request}"
 search-not-found-text = Похоже, что по вашему запросу ничего не найдено
 film-message-text =
-    {$title} ({$year}) ⭐️{$rating}
-    Жанры: {$genres}
+    🎬 {$title} ({$year}) ⭐️{$rating}
+    🎭 <b>Жанры:</b> <i>{$genres}</i>
+
+    📰 <b>Описание:</b> <i>{$description}</i>
+
+    📣 Поделись фильмом! <code>{$share_url}</code>
 serial-season-url-button-text = Сезон {$number}
 film-url-button-text = Смотреть онлайн [{$title}]
 film-not-found-text = Похоже, что этого фильма больше нет

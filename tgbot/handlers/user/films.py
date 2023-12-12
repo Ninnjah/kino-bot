@@ -3,14 +3,14 @@ import asyncio
 from aiogram import Router, F
 from aiogram.types import CallbackQuery, Message, URLInputFile
 from aiogram.utils.chat_action import ChatActionSender
+from aiogram.utils.deep_linking import create_start_link
 
 from fluent.runtime import FluentLocalization
 from fluent.runtime.types import fluent_number
 
 from sqlalchemy.ext.asyncio.engine import AsyncEngine
 
-from tgbot.keyboard.inline import url_kb
-from tgbot.keyboard.inline.user import search_kb
+from tgbot.keyboard.inline.user import search_kb, film_kb
 from tgbot.services.repository import Repo
 from tgbot.services.film_api import KinopoiskAPI
 from tgbot.services.film_api import players as players_
@@ -119,17 +119,12 @@ async def film_handler(
                 rating=film.rating,
                 year=fluent_number(film.year, useGrouping=False),
                 genres=", ".join(film.genres),
+                description=film.description,
+                share_url=await create_start_link(callback.bot, film.film_id),
             ),
         ),
-        reply_markup=url_kb.get(
-            *[
-                url_kb.Url(
-                    text=l10n.format_value(
-                        "film-url-button-text", dict(title=source.title)
-                    ),
-                    url=source.url,
-                )
-                for source in film.source
-            ]
+        reply_markup=film_kb.get(
+            l10n=l10n,
+            film=film,
         ),
     )
