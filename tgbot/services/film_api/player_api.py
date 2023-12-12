@@ -118,6 +118,7 @@ class IframePlayer(BasePlayer):
         try:
             return raw_data["results"][0]["path"]
         except (IndexError, TypeError):
+            logger.error(f"URL parsing error - {raw_data}")
             return
 
     async def _get_source(
@@ -159,6 +160,7 @@ class AllohaPlayer(BasePlayer):
         try:
             return raw_data["data"]["iframe"]
         except (IndexError, TypeError):
+            logger.error(f"URL parsing error - {raw_data}")
             return
 
     async def _get_source(
@@ -203,6 +205,7 @@ class BhceshPlayer(BasePlayer):
         try:
             return raw_data["iframe_url"]
         except (IndexError, TypeError):
+            logger.error(f"URL parsing error - {raw_data}")
             return
 
     async def _get_source(
@@ -244,6 +247,7 @@ class CollapsPlayer(BasePlayer):
         try:
             return raw_data["results"][0]["iframe_url"]
         except (IndexError, TypeError):
+            logger.error(f"URL parsing error - {raw_data}")
             return
 
     async def _get_source(
