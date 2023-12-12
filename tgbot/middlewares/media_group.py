@@ -1,8 +1,5 @@
 from asyncio import sleep
-from typing import (
-    Any, Callable, Awaitable, MutableMapping,
-    Tuple, Dict, Optional, cast
-)
+from typing import Any, Callable, Awaitable, MutableMapping, Tuple, Dict, Optional, cast
 
 from aiogram import BaseMiddleware
 from aiogram.types import Message, TelegramObject
@@ -16,12 +13,12 @@ class AlbumMiddleware(BaseMiddleware):
     DEFAULT_TTL = 0.2
 
     def __init__(
-        self,
-        latency: float = DEFAULT_LATENCY,
-        ttl: float = DEFAULT_TTL
+        self, latency: float = DEFAULT_LATENCY, ttl: float = DEFAULT_TTL
     ) -> None:
         self.latency = latency
-        self.cache: MutableMapping[str, Dict[str, Any]] = TTLCache(maxsize=10_000, ttl=ttl)
+        self.cache: MutableMapping[str, Dict[str, Any]] = TTLCache(
+            maxsize=10_000, ttl=ttl
+        )
 
     @staticmethod
     def get_content(message: Message) -> Optional[Tuple[Media, str]]:
@@ -39,7 +36,7 @@ class AlbumMiddleware(BaseMiddleware):
         self,
         handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
         event: TelegramObject,
-        data: Dict[str, Any]
+        data: Dict[str, Any],
     ) -> Any:
         if isinstance(event, Message) and event.media_group_id is not None:
             key = event.media_group_id
@@ -57,7 +54,7 @@ class AlbumMiddleware(BaseMiddleware):
             self.cache[key] = {
                 content_type: [media],
                 "messages": [event],
-                "caption": event.html_text
+                "caption": event.html_text,
             }
 
             await sleep(self.latency)
@@ -65,10 +62,12 @@ class AlbumMiddleware(BaseMiddleware):
 
         elif isinstance(event, Message) and self.get_content(event):
             media, content_type = cast(Tuple[Media, str], self.get_content(event))
-            data["album"] = Album(**{
-                content_type: [media],
-                "messages": [event],
-                "caption": event.html_text
-            })
+            data["album"] = Album(
+                **{
+                    content_type: [media],
+                    "messages": [event],
+                    "caption": event.html_text,
+                }
+            )
 
         return await handler(event, data)

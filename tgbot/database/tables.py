@@ -14,7 +14,9 @@ class User(Base):
     lastname: Mapped[Optional[str]] = mapped_column(String(), nullable=True)
     username: Mapped[Optional[str]] = mapped_column(String(), nullable=True)
     created_on: Mapped[datetime] = mapped_column(DateTime(), default=func.now())
-    updated_on: Mapped[datetime] = mapped_column(DateTime(), default=func.now(), onupdate=func.now())
+    updated_on: Mapped[datetime] = mapped_column(
+        DateTime(), default=func.now(), onupdate=func.now()
+    )
 
 
 class Admin(Base):
@@ -22,4 +24,6 @@ class Admin(Base):
 
     user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     created_on: Mapped[datetime] = mapped_column(DateTime(), default=func.now())
-    updated_on: Mapped[datetime] = mapped_column(DateTime(), default=func.now(), onupdate=func.now())
+    updated_on: Mapped[datetime] = mapped_column(
+        DateTime(), default=func.now(), onupdate=func.now()
+    )

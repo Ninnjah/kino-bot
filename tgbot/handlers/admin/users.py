@@ -20,9 +20,7 @@ async def list_users(m: Message, l10n: FluentLocalization, repo: Repo):
     msg_text: str = ""
     for num, user in enumerate(user_list, start=1):
         msg_text += "{num}. <a href='tg://user?id={user_id}'><b>{user_id}</b></a> [{date}]\n".format(
-            num=num,
-            user_id=user.user_id,
-            date=user.created_on
+            num=num, user_id=user.user_id, date=user.created_on
         )
 
     for message in split_message(msg_text):

@@ -1,24 +1,28 @@
 from typing import List, Optional, Dict, Type, Union
 
 from aiogram.types import (
-    PhotoSize, Video, Audio,
-    Document, InputMediaPhoto,
-    InputMediaVideo, InputMediaAudio,
-    InputMediaDocument, Message
+    PhotoSize,
+    Video,
+    Audio,
+    Document,
+    InputMediaPhoto,
+    InputMediaVideo,
+    InputMediaAudio,
+    InputMediaDocument,
+    Message,
 )
 from pydantic import BaseModel
 
 
 Media = Union[PhotoSize, Video, Audio, Document]
 InputMedia = Union[
-    InputMediaPhoto, InputMediaVideo,
-    InputMediaAudio, InputMediaDocument
+    InputMediaPhoto, InputMediaVideo, InputMediaAudio, InputMediaDocument
 ]
 INPUT_TYPES: Dict[str, Type[InputMedia]] = {
     "photo": InputMediaPhoto,
     "video": InputMediaVideo,
     "audio": InputMediaAudio,
-    "document": InputMediaDocument
+    "document": InputMediaDocument,
 }
 
 
@@ -32,10 +36,7 @@ class Album(BaseModel):
 
     @property
     def media_types(self) -> List[str]:
-        return [
-            media_type for media_type in INPUT_TYPES
-            if getattr(self, media_type)
-        ]
+        return [media_type for media_type in INPUT_TYPES if getattr(self, media_type)]
 
     @property
     def as_media_group(self) -> List[InputMedia]:

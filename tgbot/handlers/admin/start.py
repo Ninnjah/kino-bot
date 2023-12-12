@@ -18,7 +18,9 @@ router = Router(name=__name__)
 @router.message(Command("admin"))
 async def start_handler(m: Message, l10n: FluentLocalization, state: FSMContext):
     await state.clear()
-    await m.answer(l10n.format_value("admin-start-text"), reply_markup=main_kb.get(l10n))
+    await m.answer(
+        l10n.format_value("admin-start-text"), reply_markup=main_kb.get(l10n)
+    )
 
 
 @router.message(TextFilter("admin-list-players-button-text"))

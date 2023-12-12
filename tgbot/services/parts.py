@@ -3,7 +3,7 @@ MAX_CAPTION_LENGTH = 1024
 
 
 def split_message(msg: str, *, with_photo: bool = False) -> list[str]:
-    """ Splits message into several parts considering telegram limits. """
+    """Splits message into several parts considering telegram limits."""
     parts = []
     while msg:
         # Determine max message length based on
@@ -25,7 +25,7 @@ def split_message(msg: str, *, with_photo: bool = False) -> list[str]:
             # Cut max message length from `msg`
             # and find new line to cut with it.
             part = msg[:max_msg_length]
-            first_ln = part.rfind('\n')
+            first_ln = part.rfind("\n")
 
             if first_ln != -1:
                 # We found new line. Cut with it excluding it.
@@ -33,11 +33,11 @@ def split_message(msg: str, *, with_photo: bool = False) -> list[str]:
                 parts.append(new_part)
                 # Cut `msg` with new part length
                 # and also remove new line.
-                msg = msg[first_ln + 1:]
+                msg = msg[first_ln + 1 :]
             else:
                 # We didn't find any new line in message part.
                 # Let's try to find at least space to cut with it.
-                first_space = part.rfind(' ')
+                first_space = part.rfind(" ")
 
                 if first_space != -1:
                     # We found space. Cut with it excluding it.
@@ -45,7 +45,7 @@ def split_message(msg: str, *, with_photo: bool = False) -> list[str]:
                     parts.append(new_part)
                     # Cut `msg` with new part length
                     # and also remove space.
-                    msg = msg[first_space + 1:]
+                    msg = msg[first_space + 1 :]
                 else:
                     # We didn't find any space break.
                     # Just append new part and cut message

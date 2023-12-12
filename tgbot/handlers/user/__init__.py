@@ -3,9 +3,7 @@ from . import start
 from . import films
 from . import errors
 
-__all__ = (
-    "router",
-)
+__all__ = ("router",)
 
 router = Router(name=__name__)
 

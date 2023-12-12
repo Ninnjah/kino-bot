@@ -45,12 +45,21 @@ async def main():
     logger.error("Starting bot")
 
     if config.use_redis:
-        storage = RedisStorage(redis.Redis(), key_builder=DefaultKeyBuilder(prefix=config.redis_prefix, with_destiny=True))
+        storage = RedisStorage(
+            redis.Redis(),
+            key_builder=DefaultKeyBuilder(
+                prefix=config.redis_prefix, with_destiny=True
+            ),
+        )
     else:
         storage = MemoryStorage()
 
     pool = await create_pool(config.database_url.unicode_string())
-    bot = Bot(config.bot_token.get_secret_value(), parse_mode="HTML", disable_web_page_preview=True)
+    bot = Bot(
+        config.bot_token.get_secret_value(),
+        parse_mode="HTML",
+        disable_web_page_preview=True,
+    )
     dp = Dispatcher(storage=storage)
 
     dp["admin_list"] = config.admin_list
@@ -68,7 +77,7 @@ async def main():
         admin.router,
         user.router,
     )
-    
+
     setup_dialogs(dp)
 
     await bot.delete_webhook(drop_pending_updates=True)

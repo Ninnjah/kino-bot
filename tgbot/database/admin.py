@@ -11,4 +11,6 @@ class Player(Base):
     title: Mapped[str] = mapped_column(String(), primary_key=True)
     is_active: Mapped[bool] = mapped_column(Boolean(), default=True, nullable=False)
     created_on: Mapped[datetime] = mapped_column(DateTime(), default=func.now())
-    updated_on: Mapped[datetime] = mapped_column(DateTime(), default=func.now(), onupdate=func.now())
+    updated_on: Mapped[datetime] = mapped_column(
+        DateTime(), default=func.now(), onupdate=func.now()
+    )

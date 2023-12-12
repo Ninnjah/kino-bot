@@ -8,9 +8,7 @@ from . import admins
 from . import players
 from . import users
 
-__all__ = (
-    "router",
-)
+__all__ = ("router",)
 
 router = Router(name=__name__)
 router.message.filter(RoleFilter(UserRole.ADMIN))

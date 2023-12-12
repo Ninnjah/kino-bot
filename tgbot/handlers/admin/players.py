@@ -33,7 +33,12 @@ async def list_players(dialog_manager: DialogManager, repo: Repo, **kwargs):
     return {"players": [(i.title, i.is_active) for i in players] if players else []}
 
 
-async def update_player_handlers(callback: CallbackQuery, select: Multiselect, manager: DialogManager, player_title: str):
+async def update_player_handlers(
+    callback: CallbackQuery,
+    select: Multiselect,
+    manager: DialogManager,
+    player_title: str,
+):
     repo = manager.middleware_data["repo"]
 
     active = not select.is_checked(player_title)
@@ -50,7 +55,7 @@ players_dialog = Dialog(
                 id="players_ms",
                 items="players",
                 item_id_getter=itemgetter(0),
-                on_click=update_player_handlers
+                on_click=update_player_handlers,
             ),
             width=1,
             height=5,
@@ -61,7 +66,7 @@ players_dialog = Dialog(
         getter=list_players,
         state=PlayerConfigSG.main,
     ),
-    on_start=start_config
+    on_start=start_config,
 )
 
 router.include_routers(

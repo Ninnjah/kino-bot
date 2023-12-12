@@ -10,6 +10,8 @@ logger = logging.getLogger(__name__)
 
 
 @router.error(ExceptionTypeFilter(Exception), F.update.message.as_("message"))
-async def handle_my_custom_exception(event: ErrorEvent, message: Message, l10n: FluentLocalization):
+async def handle_my_custom_exception(
+    event: ErrorEvent, message: Message, l10n: FluentLocalization
+):
     logger.error(f"Critical error caused by {event.exception}", exc_info=True)
     await message.answer(l10n.format_value("error-handler-text"))

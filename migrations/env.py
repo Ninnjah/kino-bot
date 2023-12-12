@@ -15,7 +15,9 @@ from tgbot.config_reader import config as _config
 config = context.config
 
 section = config.config_ini_section
-config.set_section_option(section, "DATABASE_URL", _config.database_url.unicode_string())
+config.set_section_option(
+    section, "DATABASE_URL", _config.database_url.unicode_string()
+)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

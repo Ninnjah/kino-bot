@@ -14,14 +14,16 @@ class RoleMiddleware(BaseMiddleware):
         self,
         handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
         event: TelegramObject,
-        data: Dict[str, Any]
+        data: Dict[str, Any],
     ) -> Any:
         if not getattr(event, "from_user", None):
             data["role"] = None
-        elif any((
-            event.from_user.id in self.admin_list,
-            await data["repo"].is_admin(event.from_user.id)
-        )):
+        elif any(
+            (
+                event.from_user.id in self.admin_list,
+                await data["repo"].is_admin(event.from_user.id),
+            )
+        ):
             data["role"] = UserRole.ADMIN
         else:
             data["role"] = UserRole.USER

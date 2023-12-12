@@ -5,15 +5,20 @@ from aiocache import cached, RedisCache
 from aiocache.serializers import PickleSerializer
 from httpx import AsyncClient
 
-from tgbot.services.film_api.models.films import Film, FilmType, Search, DetailFilm, Season, Episode
+from tgbot.services.film_api.models.films import (
+    Film,
+    FilmType,
+    Search,
+    DetailFilm,
+    Season,
+    Episode,
+)
 
 
 class KinopoiskAPI:
     def __init__(self, token: str):
         self.token = token
-        self.headers = {
-            "X-API-KEY": self.token
-        }
+        self.headers = {"X-API-KEY": self.token}
 
         self.api_version = "v2.1"
         self._base_url = f"https://kinopoiskapiunofficial.tech/api/{self.api_version}"
@@ -32,7 +37,9 @@ class KinopoiskAPI:
             film_length=raw_film.get("filmLength"),
             countries=[country["country"] for country in raw_film.get("countries", [])],
             genres=[genre["genre"] for genre in raw_film.get("genres", [])],
-            rating=raw_film.get("rating") if raw_film.get("rating") != "null" else "0.0",
+            rating=raw_film.get("rating")
+            if raw_film.get("rating") != "null"
+            else "0.0",
             rating_vote_count=raw_film.get("ratingVoteCount"),
             poster_url=raw_film.get("posterUrl"),
             poster_url_preview=raw_film.get("posterUrlPreview"),
@@ -76,23 +83,27 @@ class KinopoiskAPI:
                             name_ru=episode.get("name_ru"),
                             release_date=datetime.strptime(
                                 episode.get("release_date"), "&Y-&m-&d"
-                            ) if episode.get("release_date") else None,
+                            )
+                            if episode.get("release_date")
+                            else None,
                             synopsis=episode.get("synopsis"),
                         )
                         for episode in season.get("episodes", [])
-                    ]
-                ) for season in raw_film.get("seasons", [])
+                    ],
+                )
+                for season in raw_film.get("seasons", [])
             ],
             slogan=raw_film.get("slogan"),
             web_url=raw_film.get("web_url"),
         )
 
-    @cached(ttl=43200, cache=RedisCache, serializer=PickleSerializer(), namespace="cache")
-    async def films_search_by_keyword(self, keyword: str, page: int = 1) -> Optional[Search]:
-        params = {
-            "keyword": keyword,
-            "page": page
-        }
+    @cached(
+        ttl=43200, cache=RedisCache, serializer=PickleSerializer(), namespace="cache"
+    )
+    async def films_search_by_keyword(
+        self, keyword: str, page: int = 1
+    ) -> Optional[Search]:
+        params = {"keyword": keyword, "page": page}
 
         async with AsyncClient(headers=self.headers) as client:
             res = await client.get(self._films_search_by_keyword, params=params)
@@ -105,7 +116,9 @@ class KinopoiskAPI:
                     films=[self._parse_film(x) for x in data.get("films")],
                 )
 
-    @cached(ttl=43200, cache=RedisCache, serializer=PickleSerializer(), namespace="cache")
+    @cached(
+        ttl=43200, cache=RedisCache, serializer=PickleSerializer(), namespace="cache"
+    )
     async def film(self, film_id: int) -> Optional[DetailFilm]:
         async with AsyncClient(headers=self.headers) as client:
             res = await client.get(f"{self._films}/{film_id}")

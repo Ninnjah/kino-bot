@@ -16,7 +16,7 @@ class AdminSource(DotEnvSettingsSource):
         self, field_name: str, field: FieldInfo, value: Any, value_is_complex: bool
     ) -> Any:
         if field_name == "admin_list" and value:
-            return [int(x) for x in value.split(',')]
+            return [int(x) for x in value.split(",")]
         return value
 
 

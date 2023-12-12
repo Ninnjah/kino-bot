@@ -24,10 +24,10 @@ def get(l10n: FluentLocalization, films: List[Film]) -> InlineKeyboardMarkup:
                 dict(
                     title=film.name_ru or film.name_en,
                     rating=film.rating,
-                    year=fluent_number(film.year, useGrouping=False)
-                )
+                    year=fluent_number(film.year, useGrouping=False),
+                ),
             ),
-            callback_data=SearchCallback(film_id=film.film_id)
+            callback_data=SearchCallback(film_id=film.film_id),
         )
 
     builder.adjust(1)

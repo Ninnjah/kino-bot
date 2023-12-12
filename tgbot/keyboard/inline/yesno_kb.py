@@ -11,16 +11,18 @@ class YesNoCallback(CallbackData, prefix="yn"):
     data: Optional[Union[str, int, float]]
 
 
-def get(l10n: FluentLocalization, data: Optional[Union[str, int, float]] = None) -> InlineKeyboardMarkup:
+def get(
+    l10n: FluentLocalization, data: Optional[Union[str, int, float]] = None
+) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
 
     builder.button(
         text=l10n.format_value("yesno-button-text-yes"),
-        callback_data=YesNoCallback(action=True, data=data)
+        callback_data=YesNoCallback(action=True, data=data),
     )
     builder.button(
         text=l10n.format_value("yesno-button-text-no"),
-        callback_data=YesNoCallback(action=False, data=data)
+        callback_data=YesNoCallback(action=False, data=data),
     )
 
     builder.adjust(2)
