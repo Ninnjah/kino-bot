@@ -16,6 +16,13 @@ router = Router(name=__name__)
 async def share_film(
     m: Message, command: CommandObject, l10n: FluentLocalization, repo: Repo
 ):
+    await repo.add_user(
+        user_id=m.from_user.id,
+        firstname=m.from_user.first_name,
+        lastname=m.from_user.last_name,
+        username=m.from_user.username,
+    )
+
     try:
         film_id = int(command.args)
         film = await repo.get_film(film_id)
