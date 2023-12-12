@@ -47,7 +47,7 @@ film-message-text =
 
     📰 <b>Описание:</b> <i>{$description}</i>
 
-    📣 Поделись фильмом! <code>{$share_url}</code>
+    <a href="https://t.me/share/url?url={$share_url}">📣 Поделись фильмом!</a>
 serial-season-url-button-text = Сезон {$number}
 film-url-button-text = Смотреть онлайн [{$title}]
 film-not-found-text = Похоже, что этого фильма больше нет
