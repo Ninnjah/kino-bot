@@ -126,10 +126,11 @@ class IframePlayer(BasePlayer):
     ) -> Optional[Source]:
         res = await self._request_get(client, url, params={"kp": film.film_id})
         if res.status_code == 200:
+            data = res.json()
             return Source(
                 title=self.title,
                 film_id=film.film_id,
-                url=await self._parse_url(res.json()),
+                url=await self._parse_url(data),
             )
 
     async def get_source(self, film: films.Film) -> Optional[Source]:
@@ -173,10 +174,11 @@ class AllohaPlayer(BasePlayer):
             data = res.json()
             if data["status"] != "success":
                 return
+
             return Source(
                 title=self.title,
                 film_id=film.film_id,
-                url=await self._parse_url(res.json()),
+                url=await self._parse_url(data),
             )
 
     async def get_source(self, film: films.Film) -> Optional[Source]:
@@ -215,10 +217,14 @@ class BhceshPlayer(BasePlayer):
             client, url, params={"token": self.token, "kinopoisk_id": film.film_id}
         )
         if res.status_code == 200:
+            data = res.json()
+            if data.get("status") == 404:
+                return
+
             return Source(
                 title=self.title,
                 film_id=film.film_id,
-                url=await self._parse_url(res.json()),
+                url=await self._parse_url(data),
             )
 
     async def get_source(self, film: films.Film) -> Optional[Source]:
@@ -260,6 +266,7 @@ class CollapsPlayer(BasePlayer):
             data = res.json()
             if data["total"] == 0:
                 return
+
             return Source(
                 title=self.title, film_id=film.film_id, url=await self._parse_url(data)
             )
