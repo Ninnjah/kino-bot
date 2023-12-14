@@ -42,7 +42,7 @@ search-button-text = {$title} ({$year}) ⭐️{$rating}
 search-message-text = Вот список доступных фильмов по запросу "{$request}"
 search-not-found-text = Похоже, что по вашему запросу ничего не найдено
 film-message-text =
-    <a href="{$share_url}">🎬 {$title} ({$year}) ⭐️{$rating}</a>
+    <a href="{$share_url}">🎬 {$title}</a> ({$year}) ⭐️{$rating}
     🎭 <b>Жанры:</b> <i>{$genres}</i>
 
     📰 <b>Описание:</b> <i>{$description}</i>
