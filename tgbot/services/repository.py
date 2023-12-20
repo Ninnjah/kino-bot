@@ -37,7 +37,7 @@ class Repo:
         stmt = (
             insert(User)
             .values(
-                user_id=user_id,
+                id=user_id,
                 firstname=firstname,
                 lastname=lastname,
                 username=username,
@@ -58,7 +58,7 @@ class Repo:
 
     async def get_user(self, user_id: int) -> Optional[RowMapping]:
         """Returns user from DB by user id"""
-        stmt = select(User).where(User.user_id == user_id)
+        stmt = select(User).where(User.id == user_id)
 
         res = await self.conn.execute(stmt)
         return res.mappings().one_or_none()
