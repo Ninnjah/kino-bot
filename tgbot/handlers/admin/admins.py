@@ -152,7 +152,7 @@ async def add_admin_accept_handler(
     user_id = fluent_number(manager.dialog_data.get("admin_id"), useGrouping=False)
     logger.info(f"ADMIN {callback.from_user.id} ADD USER {user_id} TO ADMIN LIST")
 
-    await manager.start(AdminSG.main, mode=StartMode.RESET_STACK)
+    await manager.start(AdminSG.lst, mode=StartMode.RESET_STACK)
 
 
 async def admin_del_start(
@@ -168,7 +168,7 @@ async def admin_del(callback: CallbackQuery, button: Button, manager: DialogMana
     admin_id = manager.start_data["admin_id"]
 
     await repo.del_admin(admin_id)
-    await manager.start(AdminSG.main, mode=StartMode.RESET_STACK)
+    await manager.start(AdminSG.lst, mode=StartMode.RESET_STACK)
 
 
 admin_list_dialog = Dialog(
