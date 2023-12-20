@@ -1,7 +1,7 @@
-from aiogram import Router
+from aiogram import Router, F
+from aiogram.enums.chat_type import ChatType
 
-from tgbot.filters.role import RoleFilter
-from tgbot.models.role import UserRole
+from tgbot.filters.role import IsAdminFilter
 
 from . import start
 from . import admins
@@ -11,12 +11,15 @@ from . import users
 __all__ = ("router",)
 
 router = Router(name=__name__)
-router.message.filter(RoleFilter(UserRole.ADMIN))
-router.callback_query.filter(RoleFilter(UserRole.ADMIN))
+router.message.filter(IsAdminFilter(), F.chat.type.in_({ChatType.PRIVATE}))
+router.callback_query.filter(
+    IsAdminFilter(),
+    F.message.chat.type.in_({ChatType.PRIVATE}),
+)
 
 router.include_routers(
     start.router,
+    users.router,
     admins.router,
     players.router,
-    users.router,
 )

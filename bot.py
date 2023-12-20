@@ -19,6 +19,7 @@ from tgbot.handlers import admin, user
 from tgbot.middlewares.media_group import AlbumMiddleware
 from tgbot.middlewares.db import DbMiddleware
 from tgbot.middlewares.role import RoleMiddleware
+from tgbot.middlewares.throttling import ThrottlingMiddleware
 from tgbot.services.film_api import KinopoiskAPI, players
 from tgbot.services.repository import Repo
 
@@ -72,6 +73,8 @@ async def main():
     dp.callback_query.outer_middleware(DbMiddleware(pool))
     dp.message.outer_middleware(RoleMiddleware(config.admin_list))
     dp.callback_query.outer_middleware(RoleMiddleware(config.admin_list))
+    dp.message.outer_middleware(ThrottlingMiddleware())
+    dp.callback_query.outer_middleware(ThrottlingMiddleware())
 
     dp.include_routers(
         admin.router,

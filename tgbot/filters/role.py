@@ -18,7 +18,17 @@ class RoleFilter(Filter):
         *args,
         event_from_user: User,
         admin_list: List[int],
-        role: Union[None, UserRole, Collection[UserRole]] = None,
+        roles: Union[None, Collection[UserRole]] = None,
         **kwargs
     ) -> bool:
-        return role in self.roles
+        return any((role for role in roles if role in self.roles))
+
+
+class IsAdminFilter(RoleFilter):
+    def __init__(self) -> None:
+        super().__init__([UserRole.ADMIN, UserRole.SUDO])
+
+
+class IsSudoFilter(RoleFilter):
+    def __init__(self) -> None:
+        super().__init__(UserRole.SUDO)

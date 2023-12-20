@@ -16,19 +16,33 @@ class RoleMiddleware(BaseMiddleware):
         event: TelegramObject,
         data: Dict[str, Any],
     ) -> Any:
+        roles = []
+        repo = data["repo"]
+
         if not getattr(event, "from_user", None):
-            data["role"] = None
-        elif any(
-            (
-                event.from_user.id in self.admin_list,
-                await data["repo"].is_admin(event.from_user.id),
-            )
-        ):
-            data["role"] = UserRole.ADMIN
+            data["roles"] = None
+
         else:
-            data["role"] = UserRole.USER
+            roles.append(UserRole.USER)
+            admin = await repo.is_admin(event.from_user.id)
+
+            is_sudo = any(
+                (
+                    event.from_user.id in self.admin_list,
+                    admin.sudo if admin else False,
+                )
+            )
+            is_admin = admin is not None
+
+            if is_sudo:
+                roles.append(UserRole.SUDO)
+                roles.append(UserRole.ADMIN)
+            elif is_admin:
+                roles.append(UserRole.ADMIN)
+
+        data["roles"] = roles
 
         result = await handler(event, data)
 
-        del data["role"]
+        del data["roles"]
         return result

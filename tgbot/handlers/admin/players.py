@@ -47,7 +47,7 @@ async def update_player_handlers(
 
 players_dialog = Dialog(
     Window(
-        L10NFormat("admin-players-list-text"),
+        L10NFormat("admin-players-list"),
         ScrollingGroup(
             Multiselect(
                 Format("✅ {item[0]}"),
@@ -62,7 +62,7 @@ players_dialog = Dialog(
             hide_on_single_page=True,
             id="scroll_with_pager",
         ),
-        Cancel(text=L10NFormat("close-button-text")),
+        Cancel(text=L10NFormat("admin-button-close")),
         getter=list_players,
         state=PlayerConfigSG.main,
     ),

@@ -1,7 +1,7 @@
 from typing import Callable, Awaitable, Any, Dict, Optional, MutableMapping
 
 from aiogram import BaseMiddleware
-from aiogram.types import TelegramObject, User
+from aiogram.types import TelegramObject, User, Message
 from cachetools import TTLCache
 
 
@@ -19,7 +19,12 @@ class ThrottlingMiddleware(BaseMiddleware):
     ) -> Optional[Any]:
         user: Optional[User] = data.get("event_from_user", None)
 
-        if user is not None:
+        if all(
+            (
+                user is not None,
+                isinstance(event, Message) and event.media_group_id is None,
+            )
+        ):
             if user.id in self.cache:
                 return None
 

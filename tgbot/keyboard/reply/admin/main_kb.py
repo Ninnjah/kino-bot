@@ -1,18 +1,19 @@
-from functools import cache
+from typing import Sequence
 
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.utils.keyboard import ReplyKeyboardBuilder, KeyboardButton
 from fluent.runtime import FluentLocalization
 
+from tgbot.models.role import UserRole
 
-@cache
-def get(l10n: FluentLocalization):
-    keyboard = [
-        [KeyboardButton(text=l10n.format_value("admin-list-user-button-text"))],
-        [KeyboardButton(text=l10n.format_value("admin-list-admin-button-text"))],
-        [
-            KeyboardButton(text=l10n.format_value("admin-add-admin-button-text")),
-            KeyboardButton(text=l10n.format_value("admin-delete-admin-button-text")),
-        ],
-        [KeyboardButton(text=l10n.format_value("admin-list-players-button-text"))],
-    ]
-    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
+
+def get(l10n: FluentLocalization, roles: Sequence[UserRole]):
+    keyboard = ReplyKeyboardBuilder()
+
+    keyboard.row(KeyboardButton(text=l10n.format_value("admin-button-list-users")))
+
+    if UserRole.SUDO in roles:
+        keyboard.row(KeyboardButton(text=l10n.format_value("admin-button-list-admins")))
+
+    keyboard.row(KeyboardButton(text=l10n.format_value("admin-button-list-players")))
+
+    return keyboard.as_markup(resize_keyboard=True)

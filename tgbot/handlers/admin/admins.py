@@ -1,230 +1,294 @@
 import logging
-from contextlib import suppress
+from operator import itemgetter
 
-from aiogram import Router, F
-from aiogram.exceptions import TelegramForbiddenError, TelegramBadRequest
-from aiogram.filters import StateFilter
-from aiogram.fsm.context import FSMContext
+from aiogram import Router
 from aiogram.types import CallbackQuery, Message
-from fluent.runtime import FluentLocalization
 
-from tgbot.filters.text import TextFilter
-from tgbot.handlers.admin.states.admins import AddAdminSG, DelAdminSG
-from tgbot.keyboard.reply import cancel_kb
-from tgbot.keyboard.reply.admin import main_kb
-from tgbot.keyboard.inline import yesno_kb
+from aiogram_dialog import DialogManager, Dialog, Window, StartMode
+from aiogram_dialog.widgets.text import Format
+from aiogram_dialog.widgets.input import MessageInput
+from aiogram_dialog.widgets.kbd import (
+    Cancel,
+    Row,
+    Button,
+    ScrollingGroup,
+    Select,
+    Checkbox,
+    ManagedCheckbox,
+    Back,
+)
+
+from fluent.runtime.builtins import fluent_number
+
+from tgbot.handlers.admin.states.admins import AdminSG, AddAdminSG, DelAdminSG
+from tgbot.services.l10n_dialog import L10NFormat
 from tgbot.services.repository import Repo
-from tgbot.services.parts import split_message
 
 logger = logging.getLogger(__name__)
 router = Router(name=__name__)
 
 
-@router.message(TextFilter("admin-list-admin-button-text"))
-async def list_handler(m: Message, l10n: FluentLocalization, repo: Repo):
-    user_list = await repo.list_admins()
-
-    if not user_list:
-        await m.answer(l10n.format_value("admin-admins-list-handler-error-notfound"))
-        return
-
-    msg_text: str = ""
-    for num, user in enumerate(user_list, start=1):
-        msg_text += "{num}. <a href='tg://user?id={user_id}'><b>{user_id}</b></a> [{date}]\n".format(
-            num=num, user_id=user.user_id, date=user.created_on
-        )
-
-    for message in split_message(msg_text):
-        await m.answer(message)
+async def get_admin_id(dialog_manager: DialogManager, **kwargs):
+    admin_id = dialog_manager.dialog_data.get("admin_id")
+    return {"admin_id": str(admin_id)}
 
 
-@router.message(TextFilter("admin-add-admin-button-text"))
-async def add_request(m: Message, l10n: FluentLocalization, state: FSMContext):
-    await state.clear()
-    await m.answer(
-        l10n.format_value("admin-admins-add-request-text"),
-        reply_markup=cancel_kb.get(l10n),
-    )
-    await state.set_state(AddAdminSG.user_id)
+async def get_admin(dialog_manager: DialogManager, repo: Repo, **kwargs):
+    admin_id = dialog_manager.dialog_data.get(
+        "admin_id"
+    ) or dialog_manager.start_data.get("admin_id")
+    admin = await repo.get_admin(admin_id)
+
+    sudo_checkbox = dialog_manager.find("admin_sudo_ch")
+    if sudo_checkbox:
+        await sudo_checkbox.set_checked(admin.sudo)
+
+    return {
+        "admin_id": str(admin.id),
+        "sudo": admin.sudo,
+        "created_on": admin.created_on.strftime("%Y.%m.%d %H:%M"),
+        "updated_on": admin.updated_on.strftime("%Y.%m.%d %H:%M"),
+    }
 
 
-@router.message(StateFilter(AddAdminSG.user_id))
-async def add_handler(
-    m: Message, l10n: FluentLocalization, repo: Repo, state: FSMContext
+async def get_admins(dialog_manager: DialogManager, repo: Repo, **kwargs):
+    admins = await repo.list_admins()
+    return {
+        "admins": [(admin.id, admin.id, "🔑 " if admin.sudo else "") for admin in admins]
+    }
+
+
+async def get_users(dialog_manager: DialogManager, repo: Repo, **kwargs):
+    users = await repo.list_users()
+    return {"users": [(user.id, user) for user in users]}
+
+
+async def show_admin(
+    callback: CallbackQuery, select: Select, manager: DialogManager, admin_id: str
 ):
+    manager.dialog_data["admin_id"] = int(admin_id)
+    await manager.next()
+
+
+async def change_sudo_status(
+    callback: CallbackQuery, checkbox: ManagedCheckbox, manager: DialogManager
+):
+    repo: Repo = manager.middleware_data["repo"]
+    sudo = not checkbox.is_checked()
+    admin_id = manager.dialog_data["admin_id"]
+
+    await repo.set_admin_sudo(admin_id, sudo)
+
+
+async def admin_add_start(
+    callback: CallbackQuery, button: Button, manager: DialogManager
+):
+    await manager.start(AddAdminSG.user_id)
+
+
+async def admin_add_user_id(
+    m: Message, message_input: MessageInput, manager: DialogManager
+):
+    l10n = manager.middleware_data["l10n"]
+    repo = manager.middleware_data["repo"]
+
     try:
-        # If message is forwarded take user id from it
         if getattr(m, "forward_from", None):
             user_id = m.forward_from.id
-
-        # Else get user id from message text
         else:
             user_id: int = int(m.text)
 
     except ValueError:
-        await m.reply(
-            l10n.format_value("error-user-id-is-invalid"),
-            reply_markup=cancel_kb.get(l10n),
-        )
+        await m.reply(l10n.format_value("admin-error-user-id-is-invalid"))
         return
 
     else:
-        # If message from group or channel
         if user_id < 0:
-            await m.reply(
-                l10n.format_value("error-is-not-user-id"),
-                reply_markup=cancel_kb.get(l10n),
-            )
+            await m.reply(l10n.format_value("admin-error-is-not-user-id"))
             return
 
-        # If user is not an admin
         elif not await repo.is_admin(user_id):
-            await m.answer(
-                l10n.format_value(
-                    "admin-admins-add-handler-confirm", dict(user_id=user_id)
-                ),
-                reply_markup=yesno_kb.get(l10n, user_id),
-            )
-            await state.set_state(AddAdminSG.confirm)
+            manager.dialog_data["admin_id"] = user_id
+            await manager.next()
 
-        # If user is admin
         else:
-            await m.reply(
-                l10n.format_value("admin-admins-add-handler-error-already-admin"),
-                reply_markup=cancel_kb.get(l10n),
-            )
+            await m.reply(l10n.format_value("admin-error-already-admin"))
 
 
-@router.callback_query(
-    StateFilter(AddAdminSG.confirm), yesno_kb.YesNoCallback.filter(F.action == True)
-)
-async def add_conf(
-    callback: CallbackQuery,
-    callback_data: yesno_kb.YesNoCallback,
-    l10n: FluentLocalization,
-    state: FSMContext,
-    repo: Repo,
+async def admin_add_user_id_select(
+    callback: CallbackQuery, select: Select, manager: DialogManager, admin_id: str
 ):
-    # Get user id from callback data
-    user_id = int(callback_data.data)
-    await repo.add_admin(user_id=user_id)
+    l10n = manager.middleware_data["l10n"]
+    repo = manager.middleware_data["repo"]
+    user_id = int(admin_id)
+
+    if not await repo.is_admin(user_id):
+        manager.dialog_data["admin_id"] = user_id
+        await manager.next()
+    else:
+        await callback.answer(
+            l10n.format_value("admin-error-already-admin"),
+            show_alert=True,
+        )
+
+
+async def add_admin_sudo_handler(
+    callback: CallbackQuery, button: Button, manager: DialogManager
+):
+    is_sudo = button.widget_id == "yes"
+    manager.dialog_data["sudo"] = is_sudo
+    await manager.next()
+
+
+async def add_admin_accept_handler(
+    callback: CallbackQuery, button: Button, manager: DialogManager
+):
+    repo = manager.middleware_data["repo"]
+
+    await repo.add_admin(
+        user_id=manager.dialog_data.get("admin_id"),
+        sudo=manager.dialog_data.get("sudo"),
+    )
+    user_id = fluent_number(manager.dialog_data.get("admin_id"), useGrouping=False)
     logger.info(f"ADMIN {callback.from_user.id} ADD USER {user_id} TO ADMIN LIST")
 
-    # Send success message
-    await callback.message.answer(
-        l10n.format_value("admin-admins-add-conf-success", dict(user_id=user_id)),
-        reply_markup=main_kb.get(l10n),
+    await manager.start(AdminSG.main, mode=StartMode.RESET_STACK)
+
+
+async def admin_del_start(
+    callback: CallbackQuery, button: Button, manager: DialogManager
+):
+    await manager.start(
+        DelAdminSG.confirm, data={"admin_id": manager.dialog_data["admin_id"]}
     )
-    await state.clear()
 
 
-@router.callback_query(
-    StateFilter(AddAdminSG.confirm), yesno_kb.YesNoCallback.filter(F.action == False)
+async def admin_del(callback: CallbackQuery, button: Button, manager: DialogManager):
+    repo: Repo = manager.middleware_data["repo"]
+    admin_id = manager.start_data["admin_id"]
+
+    await repo.del_admin(admin_id)
+    await manager.start(AdminSG.main, mode=StartMode.RESET_STACK)
+
+
+admin_list_dialog = Dialog(
+    Window(
+        L10NFormat("admin-admins-list"),
+        ScrollingGroup(
+            Select(
+                Format("{item[2]}{item[1]}"),
+                id="admin_list",
+                item_id_getter=itemgetter(0),
+                items="admins",
+                on_click=show_admin,
+            ),
+            id="admin_list_sg",
+            width=1,
+            height=10,
+            hide_on_single_page=True,
+        ),
+        Button(
+            L10NFormat("admin-button-add-admin"),
+            id="admin_add",
+            on_click=admin_add_start,
+        ),
+        getter=get_admins,
+        state=AdminSG.lst,
+    ),
+    Window(
+        L10NFormat("admin-show-admin"),
+        Checkbox(
+            L10NFormat("admin-show-sudo"),
+            L10NFormat("admin-show-sudo"),
+            id="admin_sudo_ch",
+            on_click=change_sudo_status,
+        ),
+        Button(
+            L10NFormat("admin-button-del-admin"),
+            id="admin_del",
+            on_click=admin_del_start,
+        ),
+        Back(L10NFormat("admin-button-back")),
+        getter=get_admin,
+        state=AdminSG.profile,
+    ),
 )
-async def add_reject(
-    callback: CallbackQuery, l10n: FluentLocalization, state: FSMContext
-):
-    with suppress(TelegramForbiddenError, TelegramBadRequest):
-        await callback.message.delete()
-
-    await callback.message.answer(
-        l10n.format_value("admin-admins-add-conf-reject"),
-        reply_markup=main_kb.get(l10n),
-    )
-    await state.clear()
 
 
-@router.message(TextFilter("admin-delete-admin-button-text"))
-async def del_request(m: Message, l10n: FluentLocalization, state: FSMContext):
-    await state.clear()
-    await m.answer(
-        l10n.format_value("admin-admins-del-request-text"),
-        reply_markup=cancel_kb.get(l10n),
-    )
-    await state.set_state(DelAdminSG.user_id)
-
-
-@router.message(StateFilter(DelAdminSG.user_id))
-async def del_handler(
-    m: Message, l10n: FluentLocalization, repo: Repo, state: FSMContext
-):
-    try:
-        # If message is forwarded take user id from it
-        if getattr(m, "forward_from", None):
-            user_id = m.forward_from.id
-
-        # Else get user id from message text
-        else:
-            user_id: int = int(m.text)
-
-    except ValueError:
-        await m.reply(
-            l10n.format_value("error-user-id-is-invalid"),
-            reply_markup=cancel_kb.get(l10n),
-        )
-        return
-
-    else:
-        # If message from group or channel
-        if user_id < 0:
-            await m.reply(
-                l10n.format_value("error-is-not-user-id"),
-                reply_markup=cancel_kb.get(l10n),
-            )
-            return
-
-        # If user is not an admin
-        elif await repo.is_admin(user_id):
-            await m.answer(
-                l10n.format_value(
-                    "admin-admins-del-handler-confirm", dict(user_id=user_id)
-                ),
-                reply_markup=yesno_kb.get(l10n, user_id),
-            )
-            await state.set_state(DelAdminSG.confirm)
-
-        # If user is admin
-        else:
-            await m.reply(
-                l10n.format_value("admin-admins-del-handler-error-not-admin"),
-                reply_markup=cancel_kb.get(l10n),
-            )
-
-
-@router.callback_query(
-    StateFilter(DelAdminSG.confirm), yesno_kb.YesNoCallback.filter(F.action == True)
+admin_add_dialog = Dialog(
+    Window(
+        L10NFormat("admin-add-admin-request"),
+        MessageInput(admin_add_user_id),
+        ScrollingGroup(
+            Select(
+                Format("{item[1].id}"),
+                id="user_list",
+                item_id_getter=itemgetter(0),
+                items="users",
+                on_click=admin_add_user_id_select,
+            ),
+            id="admin_list_sg",
+            width=1,
+            height=10,
+            hide_on_single_page=True,
+        ),
+        Cancel(text=L10NFormat("admin-button-cancel")),
+        getter=get_users,
+        state=AddAdminSG.user_id,
+    ),
+    Window(
+        L10NFormat("admin-add-admin-sudo-request"),
+        Row(
+            Button(
+                L10NFormat("admin-button-yes"),
+                id="yes",
+                on_click=add_admin_sudo_handler,
+            ),
+            Button(
+                L10NFormat("admin-button-no"),
+                id="no",
+                on_click=add_admin_sudo_handler,
+            ),
+        ),
+        Cancel(text=L10NFormat("admin-button-cancel")),
+        getter=get_admin_id,
+        state=AddAdminSG.sudo,
+    ),
+    Window(
+        L10NFormat("admin-add-admin-confirm"),
+        Row(
+            Button(
+                L10NFormat("admin-button-yes"),
+                id="accept",
+                on_click=add_admin_accept_handler,
+            ),
+            Cancel(text=L10NFormat("admin-button-no")),
+        ),
+        getter=get_admin_id,
+        state=AddAdminSG.confirm,
+    ),
 )
-async def del_conf(
-    callback: CallbackQuery,
-    callback_data: yesno_kb.YesNoCallback,
-    l10n: FluentLocalization,
-    state: FSMContext,
-    repo: Repo,
-):
-    # Get user id from callback data
-    user_id = int(callback_data.data)
-    await repo.del_admin(user_id=user_id)
-    logger.info(f"ADMIN {callback.from_user.id} DEL USER {user_id} FROM ADMIN LIST")
-
-    # Send success message
-    await callback.message.answer(
-        l10n.format_value("admin-admins-del-conf-success", dict(user_id=user_id)),
-        reply_markup=main_kb.get(l10n),
-    )
-    await state.clear()
 
 
-@router.callback_query(
-    StateFilter(DelAdminSG.confirm), yesno_kb.YesNoCallback.filter(F.action == False)
+admin_del_dialog = Dialog(
+    Window(
+        L10NFormat("admin-delete-text"),
+        Row(
+            Button(
+                L10NFormat("admin-button-yes"),
+                id="yes",
+                on_click=admin_del,
+            ),
+            Cancel(L10NFormat("admin-button-cancel")),
+        ),
+        getter=get_admin,
+        state=DelAdminSG.confirm,
+    ),
 )
-async def del_reject(
-    callback: CallbackQuery, l10n: FluentLocalization, state: FSMContext
-):
-    with suppress(TelegramForbiddenError, TelegramBadRequest):
-        await callback.message.delete()
 
-    await callback.message.answer(
-        l10n.format_value("admin-admins-del-conf-reject"),
-        reply_markup=main_kb.get(l10n),
-    )
-    await state.clear()
+
+router.include_routers(
+    admin_list_dialog,
+    admin_add_dialog,
+    admin_del_dialog,
+)

@@ -71,19 +71,35 @@ class Repo:
         return res.mappings().all()
 
     # admins
-    async def add_admin(self, user_id: int) -> None:
+    async def add_admin(self, user_id: int, sudo: bool = False) -> None:
         """Store admin in DB, ignore duplicates
 
         :param user_id: User telegram id
         :type user_id: int
+        :param sudo: Super user privileges
+        :type sudo: bool
         """
-        stmt = insert(Admin).values(user_id=user_id).on_conflict_do_nothing()
+        stmt = insert(Admin).values(id=user_id, sudo=sudo).on_conflict_do_nothing()
 
         await self.conn.execute(stmt)
         await self.conn.commit()
         return
 
-    async def is_admin(self, user_id: int) -> bool:
+    async def set_admin_sudo(self, user_id: int, sudo: bool) -> None:
+        """Set admin sudo status
+
+        :param user_id: User telegram id
+        :type user_id: int
+        :param sudo: Super user privileges
+        :type sudo: bool
+        """
+        stmt = update(Admin).values(sudo=sudo).where(Admin.id == user_id)
+
+        await self.conn.execute(stmt)
+        await self.conn.commit()
+        return
+
+    async def is_admin(self, user_id: int) -> Optional[RowMapping]:
         """Checks user is admin or not
 
         :param user_id: User telegram id
@@ -91,11 +107,11 @@ class Repo:
         :return: User is admin boolean
         :rtype: bool
         """
-        stmt = select(Admin).where(Admin.user_id == user_id)
+        stmt = select(Admin).where(Admin.id == user_id)
 
         res = await self.conn.execute(stmt)
         res = res.mappings().one_or_none()
-        return res is not None
+        return res
 
     async def del_admin(self, user_id: int) -> None:
         """Delete admin from DB by user id
@@ -105,14 +121,23 @@ class Repo:
         :return: Deleted row count
         :rtype: int
         """
-        stmt = delete(Admin).where(Admin.user_id == user_id)
+        stmt = delete(Admin).where(Admin.id == user_id)
 
         await self.conn.execute(stmt)
         await self.conn.commit()
 
+    async def get_admin(self, user_id: int) -> Optional[RowMapping]:
+        """Returns admin from DB by user id"""
+        stmt = select(Admin).where(Admin.id == user_id)
+
+        res = await self.conn.execute(stmt)
+        return res.mappings().one_or_none()
+
     async def list_admins(self) -> Sequence[RowMapping]:
         """List all bot admins"""
-        stmt = select(Admin)
+        stmt = (
+            select(Admin).order_by(Admin.sudo.desc()).order_by(Admin.updated_on.desc())
+        )
 
         res = await self.conn.execute(stmt)
         return res.mappings().all()
