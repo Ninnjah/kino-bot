@@ -236,6 +236,13 @@ class FilmSearchResponseFilms(BaseModel):
         except ValueError:
             raise ValueError("year must be `null` or int")
 
+    @validator("rating", pre=True)
+    def rating_validator(cls, v: Optional[Union[str, int]]) -> Optional[int]:
+        if v == "null":
+            return None
+
+        return str(v)
+
 
 class FilmSearchByFiltersResponseItems(BaseModel):
     kinopoisk_id: Optional[int] = Field(None, example=263531, alias="kinopoiskId")
@@ -368,6 +375,13 @@ class PersonResponseFilms(BaseModel):
     profession_key: Optional[ProfessionKey] = Field(
         None, example="ACTOR", alias="professionKey"
     )
+
+    @validator("rating", pre=True)
+    def rating_validator(cls, v: Optional[Union[str, int]]) -> Optional[int]:
+        if v == "null":
+            return None
+
+        return str(v)
 
 
 class PersonByNameResponseItems(BaseModel):

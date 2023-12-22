@@ -23,7 +23,7 @@ def get(l10n: FluentLocalization, films: List[Film]) -> InlineKeyboardMarkup:
                 "search-button-text",
                 dict(
                     title=film.name_ru or film.name_en,
-                    rating=film.rating,
+                    rating=film.rating or "0.0",
                     year=fluent_number(film.year, useGrouping=False),
                 ),
             ),
