@@ -10,11 +10,11 @@ from fluent.runtime.types import fluent_number
 
 from sqlalchemy.ext.asyncio.engine import AsyncEngine
 
+from kinopoisk_api.api import KinopoiskAPI
+from kinopoisk_api.models.model import FilmSearchByFiltersResponse as Search
 from tgbot.keyboard.inline.user import search_kb, film_kb
 from tgbot.services.repository import Repo
-from tgbot.services.film_api import KinopoiskAPI
 from tgbot.services.film_api import players as players_
-from tgbot.services.film_api.models.films import Search
 
 router = Router(name=__name__)
 
@@ -54,7 +54,8 @@ async def search_films(
                 needed_source = [
                     x
                     for x in needed_films
-                    if not x.source or player.title not in [y.title for y in x.source]
+                    if not getattr(x, "source", None)
+                    or player.title not in [y.title for y in x.source]
                 ]
 
                 sources = await player.get_bunch_source(needed_source)
@@ -88,7 +89,7 @@ async def search_film_handler(
 ):
     await m.bot.send_chat_action(m.chat.id, "typing")
 
-    search = await kinopoisk.films_search_by_keyword(m.text)
+    search = await kinopoisk.films.search_by_keyword(m.text)
     if not search:
         await m.answer(l10n.format_value("search-not-found-text"))
         return
@@ -106,7 +107,7 @@ async def film_handler(
 ):
     await callback.answer()
     film = await repo.get_film(callback_data.film_id)
-    if not film or not film.source:
+    if not film or not getattr(film, "source", None):
         await callback.answer(l10n.format_value("film-not-found-text"), show_alert=True)
         return
 

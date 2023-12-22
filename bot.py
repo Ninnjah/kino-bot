@@ -13,6 +13,8 @@ from sqlalchemy.pool import AsyncAdaptedQueuePool
 
 import redis.asyncio as redis
 
+from kinopoisk_api.api import KinopoiskAPI
+
 from tgbot.config_reader import config
 from tgbot.fluent_loader import get_fluent_localization
 from tgbot.handlers import admin, user
@@ -20,7 +22,7 @@ from tgbot.middlewares.media_group import AlbumMiddleware
 from tgbot.middlewares.db import DbMiddleware
 from tgbot.middlewares.role import RoleMiddleware
 from tgbot.middlewares.throttling import ThrottlingMiddleware
-from tgbot.services.film_api import KinopoiskAPI, players
+from tgbot.services.film_api import players
 from tgbot.services.repository import Repo
 
 logger = logging.getLogger(__name__)

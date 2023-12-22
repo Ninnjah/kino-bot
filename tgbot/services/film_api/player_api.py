@@ -7,8 +7,7 @@ from aiocache import cached, RedisCache
 from aiocache.serializers import PickleSerializer
 from httpx import AsyncClient, ConnectTimeout, ConnectError, ReadTimeout, Response
 
-from tgbot.services.film_api.models import films
-from tgbot.services.film_api.models.films import Source
+from tgbot.services.film_api.models import Source, Film
 
 logger = logging.getLogger(__name__)
 
@@ -54,16 +53,16 @@ class BasePlayer:
 
     @abstractmethod
     async def _get_source(
-        self, client: AsyncClient, url: str, film: films.Film
+        self, client: AsyncClient, url: str, film: Film
     ) -> Optional[Source]:
         ...
 
     @abstractmethod
-    async def get_source(self, film: films.Film) -> Optional[Source]:
+    async def get_source(self, film: Film) -> Optional[Source]:
         ...
 
     @abstractmethod
-    async def get_bunch_source(self, film_list: List[films.Film]) -> List[Source]:
+    async def get_bunch_source(self, film_list: List[Film]) -> List[Source]:
         ...
 
 
@@ -77,7 +76,7 @@ class VoidboostPlayer(BasePlayer):
         ...
 
     async def _get_source(
-        self, client: AsyncClient, url: str, film: films.Film
+        self, client: AsyncClient, url: str, film: Film
     ) -> Optional[Source]:
         res = await self._request_get(client, url)
         if res.status_code == 200:
@@ -85,7 +84,7 @@ class VoidboostPlayer(BasePlayer):
                 title=self.title, film_id=film.film_id, url=str(res.request.url)
             )
 
-    async def get_source(self, film: films.Film) -> Optional[Source]:
+    async def get_source(self, film: Film) -> Optional[Source]:
         async with AsyncClient() as client:
             res = await self._request_get(
                 client, f"{self.base_url}/embed/{film.film_id}"
@@ -95,7 +94,7 @@ class VoidboostPlayer(BasePlayer):
                     title=self.title, film_id=film.film_id, url=str(res.request.url)
                 )
 
-    async def get_bunch_source(self, film_list: List[films.Film]) -> List[Source]:
+    async def get_bunch_source(self, film_list: List[Film]) -> List[Source]:
         async with AsyncClient() as client:
             res = await asyncio.gather(
                 *[
@@ -122,7 +121,7 @@ class IframePlayer(BasePlayer):
             return
 
     async def _get_source(
-        self, client: AsyncClient, url: str, film: films.Film
+        self, client: AsyncClient, url: str, film: Film
     ) -> Optional[Source]:
         res = await self._request_get(client, url, params={"kp": film.film_id})
         if res.status_code == 200:
@@ -137,13 +136,13 @@ class IframePlayer(BasePlayer):
                 url=source_url,
             )
 
-    async def get_source(self, film: films.Film) -> Optional[Source]:
+    async def get_source(self, film: Film) -> Optional[Source]:
         async with AsyncClient() as client:
             return await self._get_source(
                 client, url=f"{self.base_url}/search", film=film
             )
 
-    async def get_bunch_source(self, film_list: List[films.Film]) -> List[Source]:
+    async def get_bunch_source(self, film_list: List[Film]) -> List[Source]:
         async with AsyncClient() as client:
             res = await asyncio.gather(
                 *[
@@ -169,7 +168,7 @@ class AllohaPlayer(BasePlayer):
             return
 
     async def _get_source(
-        self, client: AsyncClient, url: str, film: films.Film
+        self, client: AsyncClient, url: str, film: Film
     ) -> Optional[Source]:
         res = await self._request_get(
             client, url, params={"token": self.token, "kp": film.film_id}
@@ -188,11 +187,11 @@ class AllohaPlayer(BasePlayer):
                 url=source_url,
             )
 
-    async def get_source(self, film: films.Film) -> Optional[Source]:
+    async def get_source(self, film: Film) -> Optional[Source]:
         async with AsyncClient() as client:
             return await self._get_source(client, url=self.base_url, film=film)
 
-    async def get_bunch_source(self, film_list: List[films.Film]) -> List[Source]:
+    async def get_bunch_source(self, film_list: List[Film]) -> List[Source]:
         async with AsyncClient() as client:
             res = await asyncio.gather(
                 *[
@@ -218,7 +217,7 @@ class BhceshPlayer(BasePlayer):
             return
 
     async def _get_source(
-        self, client: AsyncClient, url: str, film: films.Film
+        self, client: AsyncClient, url: str, film: Film
     ) -> Optional[Source]:
         res = await self._request_get(
             client, url, params={"token": self.token, "kinopoisk_id": film.film_id}
@@ -237,11 +236,11 @@ class BhceshPlayer(BasePlayer):
                 url=source_url,
             )
 
-    async def get_source(self, film: films.Film) -> Optional[Source]:
+    async def get_source(self, film: Film) -> Optional[Source]:
         async with AsyncClient() as client:
             return await self._get_source(client, url=self.base_url, film=film)
 
-    async def get_bunch_source(self, film_list: List[films.Film]) -> List[Source]:
+    async def get_bunch_source(self, film_list: List[Film]) -> List[Source]:
         async with AsyncClient() as client:
             res = await asyncio.gather(
                 *[
@@ -267,7 +266,7 @@ class CollapsPlayer(BasePlayer):
             return
 
     async def _get_source(
-        self, client: AsyncClient, url: str, film: films.Film
+        self, client: AsyncClient, url: str, film: Film
     ) -> Optional[Source]:
         res = await self._request_get(
             client, url, params={"token": self.token, "kinopoisk_id": film.film_id}
@@ -286,11 +285,11 @@ class CollapsPlayer(BasePlayer):
                 url=source_url,
             )
 
-    async def get_source(self, film: films.Film) -> Optional[Source]:
+    async def get_source(self, film: Film) -> Optional[Source]:
         async with AsyncClient() as client:
             return await self._get_source(client, url=self.base_url, film=film)
 
-    async def get_bunch_source(self, film_list: List[films.Film]) -> List[Source]:
+    async def get_bunch_source(self, film_list: List[Film]) -> List[Source]:
         async with AsyncClient() as client:
             res = await asyncio.gather(
                 *[

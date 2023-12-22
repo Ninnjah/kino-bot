@@ -13,8 +13,8 @@ from tgbot.database.tables import User, Admin
 from tgbot.database.films import Film, Source
 from tgbot.database.admin import Player
 
-from tgbot.services.film_api.models.films import Film as FilmModel
-from tgbot.services.film_api.models.films import Source as SourceModel
+from tgbot.services.film_api.models import Film as FilmModel
+from tgbot.services.film_api.models import Source as SourceModel
 
 logger = logging.getLogger(__name__)
 

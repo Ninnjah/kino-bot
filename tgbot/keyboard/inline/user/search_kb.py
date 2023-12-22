@@ -7,7 +7,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from fluent.runtime import FluentLocalization
 from fluent.runtime.types import fluent_number
 
-from tgbot.services.film_api.models.films import Film
+from tgbot.services.film_api.models import Film
 
 
 class SearchCallback(CallbackData, prefix="s"):

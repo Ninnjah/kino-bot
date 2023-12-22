@@ -3,7 +3,7 @@ from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from fluent.runtime import FluentLocalization
 
-from tgbot.services.film_api.models.films import Film
+from tgbot.services.film_api.models import Film
 
 
 class FilmShareCallback(CallbackData, prefix="share"):

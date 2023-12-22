@@ -12,7 +12,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import ENUM as Enum
 from sqlalchemy.orm import Mapped, mapped_column
 
-from tgbot.services.film_api.models.films import FilmType
+from tgbot.services.film_api.models import FilmType
 
 from .base import Base
 
