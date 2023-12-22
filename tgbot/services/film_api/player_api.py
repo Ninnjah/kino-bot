@@ -12,6 +12,11 @@ from tgbot.services.film_api.models import Source, Film
 logger = logging.getLogger(__name__)
 
 
+def cache_key_builder(func, *args, **kwargs):
+    ordered_kwargs = sorted(kwargs.items())
+    return (func.__module__ or "") + func.__name__ + str(args[1:]) + str(ordered_kwargs)
+
+
 class BasePlayer:
     TIMEOUT = 3
 
@@ -21,7 +26,11 @@ class BasePlayer:
 
     @staticmethod
     @cached(
-        ttl=3600, cache=RedisCache, serializer=PickleSerializer(), namespace="cache"
+        ttl=60,
+        key_builder=cache_key_builder,
+        cache=RedisCache,
+        serializer=PickleSerializer(),
+        namespace="cache",
     )
     async def _request_get(
         client: AsyncClient, url: str, params: Optional[dict] = None, attempts: int = 5
