@@ -3,6 +3,8 @@ from aiogram.filters import Command, CommandStart, CommandObject
 from aiogram.types import Message, URLInputFile
 from aiogram.utils.deep_linking import create_start_link
 
+from aiogram_dialog import DialogManager
+
 from fluent.runtime import FluentLocalization
 from fluent.runtime.types import fluent_number
 
@@ -14,8 +16,13 @@ router = Router(name=__name__)
 
 @router.message(CommandStart(deep_link=True))
 async def share_film(
-    m: Message, command: CommandObject, l10n: FluentLocalization, repo: Repo
+    m: Message,
+    command: CommandObject,
+    l10n: FluentLocalization,
+    repo: Repo,
+    dialog_manager: DialogManager,
 ):
+    await dialog_manager.reset_stack()
     await repo.add_user(
         user_id=m.from_user.id,
         firstname=m.from_user.first_name,
@@ -55,7 +62,10 @@ async def share_film(
 
 
 @router.message(Command("start"))
-async def start_handler(m: Message, l10n: FluentLocalization, repo: Repo):
+async def start_handler(
+    m: Message, l10n: FluentLocalization, repo: Repo, dialog_manager: DialogManager
+):
+    await dialog_manager.reset_stack()
     await repo.add_user(
         user_id=m.from_user.id,
         firstname=m.from_user.first_name,
