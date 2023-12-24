@@ -217,7 +217,7 @@ async def inline_film_handler(
                     "search-button-text",
                     dict(
                         title=film.name_ru or film.name_en,
-                        rating=film.rating if film.rating != "None" else "0.0",
+                        rating=film.rating or "0.0",
                         year=fluent_number(film.year, useGrouping=False)
                         if film.year
                         else "",
