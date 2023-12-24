@@ -165,7 +165,7 @@ async def search_film_handler(
 ):
     await m.bot.send_chat_action(m.chat.id, "typing")
 
-    search = await kinopoisk.films.search_by_keyword(m.text)
+    search = await kinopoisk.films.search_by_keyword(m.text.lower())
     if not search:
         await m.answer(l10n.format_value("search-not-found-text"))
         return
@@ -198,7 +198,7 @@ async def inline_film_handler(
 ):
     if not inline_query.query:
         return
-    search = await kinopoisk.films.search_by_keyword(inline_query.query)
+    search = await kinopoisk.films.search_by_keyword(inline_query.query.lower())
     if not search:
         await inline_query.answer(
             l10n.format_value("search-not-found-text"), is_personal=True

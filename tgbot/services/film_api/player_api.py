@@ -26,7 +26,7 @@ class BasePlayer:
 
     @staticmethod
     @cached(
-        ttl=300,
+        ttl=600,
         key_builder=cache_key_builder,
         cache=RedisCache,
         serializer=PickleSerializer(),
