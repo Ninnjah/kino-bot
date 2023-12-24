@@ -30,7 +30,7 @@ router = Router(name=__name__)
 
 async def get_films(dialog_manager: DialogManager, **kwargs):
     l10n: FluentLocalization = dialog_manager.middleware_data["l10n"]
-    raw_search = dialog_manager.start_data.get("search")
+    raw_search = dialog_manager.dialog_data.get("search")
     if not raw_search:
         return []
     search = Search.model_validate(raw_search)
@@ -159,11 +159,7 @@ async def search_film_handler(
         await m.answer(l10n.format_value("search-not-found-text"))
         return
 
-    await dialog_manager.start(
-        FilmSG.lst,
-        data={"search": search.model_dump(by_alias=True)},
-        mode=StartMode.RESET_STACK,
-    )
+    await dialog_manager.start(FilmSG.lst, mode=StartMode.RESET_STACK)
     bg_manager = dialog_manager.bg()
     asyncio.create_task(
         search_films(manager=bg_manager, l10n=l10n, pool=pool, search=search)
@@ -185,7 +181,7 @@ films_dialog = Dialog(
     Window(
         L10NFormat(
             "search-wait-text",
-            when=F["start_data"].get("search").is_(None),
+            when=F["dialog_data"].get("search").is_(None),
         ),
         L10NFormat(
             "search-message-text",
