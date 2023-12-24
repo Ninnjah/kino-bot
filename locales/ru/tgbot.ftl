@@ -69,8 +69,8 @@ film-message-text =
     🎭 <b>Жанры:</b> <i>{$genres}</i>
 
     📰 <b>Описание:</b> <i>{$description}</i>
-
-    <a href="https://t.me/share/url?url={$share_url}&text={$title}">📣 Поделись фильмом!</a>
+film-share-text = 📣 Поделись фильмом!
+film-share-url = https://t.me/share/url?url={$share_url}&text={$title}
 serial-season-url-button-text = Сезон {$number}
 film-url-button-text = Смотреть онлайн [{$title}]
 film-not-found-text = Похоже, что этого фильма больше нет
