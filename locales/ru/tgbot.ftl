@@ -1,5 +1,5 @@
 admin-start-text = Добро пожаловать в панель администратора!
-user-start-text = Добро пожаловать!
+user-start-text = Привет! Отправь мне название фильма и я постараюсь найти его для тебя!
 admin-button-back = ⬅️ Назад ⬅️
 admin-button-yes = Да
 admin-button-no = Нет
