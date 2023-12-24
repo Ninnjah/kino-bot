@@ -1,7 +1,7 @@
 from aiogram import Router
 
 from aiogram_dialog import Dialog, Window
-from aiogram_dialog.widgets.kbd import Column, Start
+from aiogram_dialog.widgets.kbd import Cancel, Column, Start
 
 from tgbot.handlers.admin.states.menu import AdminMenuSG
 from tgbot.handlers.admin.states.admins import AdminSG
@@ -34,6 +34,7 @@ admin_menu_dialog = Dialog(
                 state=PlayerConfigSG.lst,
             ),
         ),
+        Cancel(L10NFormat("admin-button-close")),
         state=AdminMenuSG.main,
     ),
 )
