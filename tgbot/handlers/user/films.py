@@ -52,7 +52,9 @@ async def get_films(dialog_manager: DialogManager, **kwargs):
                     dict(
                         title=film.name_ru or film.name_en,
                         rating=film.rating if film.rating != "None" else "0.0",
-                        year=fluent_number(film.year, useGrouping=False),
+                        year=fluent_number(film.year, useGrouping=False)
+                        if film.year
+                        else "",
                     ),
                 ),
             )
@@ -75,7 +77,7 @@ async def get_film_data(dialog_manager: DialogManager, **kwargs):
         "poster": film.poster_url.unicode_string(),
         "title": film.name_ru or film.name_en,
         "rating": film.rating or "0.0",
-        "year": fluent_number(film.year, useGrouping=False),
+        "year": fluent_number(film.year, useGrouping=False) if film.year else "",
         "genres": ", ".join(film.genres),
         "description": film.description,
         "share_url": await create_start_link(bot, film.film_id),
@@ -216,7 +218,9 @@ async def inline_film_handler(
                     dict(
                         title=film.name_ru or film.name_en,
                         rating=film.rating if film.rating != "None" else "0.0",
-                        year=fluent_number(film.year, useGrouping=False),
+                        year=fluent_number(film.year, useGrouping=False)
+                        if film.year
+                        else "",
                     ),
                 ),
                 description=film.description,
@@ -228,7 +232,9 @@ async def inline_film_handler(
                         dict(
                             title=film.name_ru or film.name_en,
                             rating=film.rating or "0.0",
-                            year=fluent_number(film.year, useGrouping=False),
+                            year=fluent_number(film.year, useGrouping=False)
+                            if film.year
+                            else "",
                             genres=", ".join(film.genres),
                             description=film.description,
                         ),
