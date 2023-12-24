@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class ProductionStatus(Enum):
+class ProductionStatus(str, Enum):
     FILMING = "FILMING"
     PRE_PRODUCTION = "PRE_PRODUCTION"
     COMPLETED = "COMPLETED"
@@ -10,7 +10,7 @@ class ProductionStatus(Enum):
     POST_PRODUCTION = "POST_PRODUCTION"
 
 
-class FilmType(Enum):
+class FilmType(str, Enum):
     FILM = "FILM"
     TV_SHOW = "TV_SHOW"
     VIDEO = "VIDEO"
@@ -19,12 +19,12 @@ class FilmType(Enum):
     UNKNOWN = "UNKNOWN"
 
 
-class FactType(Enum):
+class FactType(str, Enum):
     FACT = "FACT"
     BLOOPER = "BLOOPER"
 
 
-class DistributionType(Enum):
+class DistributionType(str, Enum):
     LOCAL = "LOCAL"
     COUNTRY_SPECIFIC = "COUNTRY_SPECIFIC"
     PREMIERE = "PREMIERE"
@@ -32,21 +32,21 @@ class DistributionType(Enum):
     WORLD_PREMIER = "WORLD_PREMIER"
 
 
-class ReleaseType(Enum):
+class ReleaseType(str, Enum):
     CINEMA = "CINEMA"
     DVD = "DVD"
     DIGITAL = "DIGITAL"
     BLURAY = "BLURAY"
 
 
-class RelationType(Enum):
+class RelationType(str, Enum):
     SEQUEL = "SEQUEL"
     PREQUEL = "PREQUEL"
     REMAKE = "REMAKE"
     UNKNOWN = "UNKNOWN"
 
 
-class ProfessionKey(Enum):
+class ProfessionKey(str, Enum):
     WRITER = "WRITER"
     OPERATOR = "OPERATOR"
     EDITOR = "EDITOR"
@@ -67,37 +67,37 @@ class ProfessionKey(Enum):
     UNKNOWN = "UNKNOWN"
 
 
-class Sex(Enum):
+class Sex(str, Enum):
     MALE = "MALE"
     FEMALE = "FEMALE"
     UNKNOWN = "UNKNOWN"
 
 
-class AccountType(Enum):
+class AccountType(str, Enum):
     FREE = "FREE"
     EXTENDED = "EXTENDED"
     UNLIMITED = "UNLIMITED"
 
 
-class RelationType1(Enum):
+class RelationType1(str, Enum):
     SIMILAR = "SIMILAR"
 
 
-class ReviewType(Enum):
+class ReviewType(str, Enum):
     POSITIVE = "POSITIVE"
     NEGATIVE = "NEGATIVE"
     NEUTRAL = "NEUTRAL"
     UNKNOWN = "UNKNOWN"
 
 
-class Site(Enum):
+class Site(str, Enum):
     YOUTUBE = "YOUTUBE"
     KINOPOISK_WIDGET = "KINOPOISK_WIDGET"
     YANDEX_DISK = "YANDEX_DISK"
     UNKNOWN = "UNKNOWN"
 
 
-class Order(Enum):
+class Order(str, Enum):
     DATE_ASC = "DATE_ASC"
     DATE_DESC = "DATE_DESC"
     USER_POSITIVE_RATING_ASC = "USER_POSITIVE_RATING_ASC"
@@ -106,7 +106,7 @@ class Order(Enum):
     USER_NEGATIVE_RATING_DESC = "USER_NEGATIVE_RATING_DESC"
 
 
-class ImageType(Enum):
+class ImageType(str, Enum):
     STILL = "STILL"
     SHOOTING = "SHOOTING"
     POSTER = "POSTER"
@@ -118,7 +118,7 @@ class ImageType(Enum):
     SCREENSHOT = "SCREENSHOT"
 
 
-class CollectionType(Enum):
+class CollectionType(str, Enum):
     TOP_POPULAR_ALL = "TOP_POPULAR_ALL"
     TOP_POPULAR_MOVIES = "TOP_POPULAR_MOVIES"
     TOP_250_TV_SHOWS = "TOP_250_TV_SHOWS"
@@ -134,7 +134,7 @@ class CollectionType(Enum):
     KIDS_ANIMATION_THEME = "KIDS_ANIMATION_THEME"
 
 
-class Month(Enum):
+class Month(str, Enum):
     JANUARY = "JANUARY"
     FEBRUARY = "FEBRUARY"
     MARCH = "MARCH"
