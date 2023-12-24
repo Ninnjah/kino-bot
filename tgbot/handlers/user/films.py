@@ -1,9 +1,16 @@
 import asyncio
+from operator import itemgetter
 
-from aiogram import Router, F
-from aiogram.types import CallbackQuery, Message, URLInputFile
+from aiogram import Bot, Router, F
+from aiogram.types import CallbackQuery, Message
 from aiogram.utils.chat_action import ChatActionSender
 from aiogram.utils.deep_linking import create_start_link
+
+from aiogram_dialog import DialogManager, Dialog, Window, StartMode
+from aiogram_dialog.manager.bg_manager import BgManager
+from aiogram_dialog.widgets.media import StaticMedia
+from aiogram_dialog.widgets.text import Format
+from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, ListGroup, Url, Back
 
 from fluent.runtime import FluentLocalization
 from fluent.runtime.types import fluent_number
@@ -11,21 +18,80 @@ from fluent.runtime.types import fluent_number
 from sqlalchemy.ext.asyncio.engine import AsyncEngine
 
 from kinopoisk_api.api import KinopoiskAPI
-from kinopoisk_api.models.model import FilmSearchByFiltersResponse as Search
-from tgbot.keyboard.inline.user import search_kb, film_kb
+from kinopoisk_api.models.model import FilmSearchResponse as Search
+from tgbot.handlers.user.states.films import FilmSG
+from tgbot.keyboard.inline.user import search_kb
 from tgbot.services.repository import Repo
 from tgbot.services.film_api import players as players_
+from tgbot.services.l10n_dialog import L10NFormat
 
 router = Router(name=__name__)
 
 
+async def get_films(dialog_manager: DialogManager, **kwargs):
+    l10n: FluentLocalization = dialog_manager.middleware_data["l10n"]
+    raw_search = dialog_manager.start_data.get("search")
+    if not raw_search:
+        return []
+    search = Search.model_validate(raw_search)
+
+    return {
+        "request": search.keyword,
+        "films": [
+            (
+                film.film_id,
+                l10n.format_value(
+                    "search-button-text",
+                    dict(
+                        title=film.name_ru or film.name_en,
+                        rating=film.rating if film.rating != "None" else "0.0",
+                        year=fluent_number(film.year, useGrouping=False),
+                    ),
+                ),
+            )
+            for film in search.films
+        ],
+    }
+
+
+async def get_film_data(dialog_manager: DialogManager, **kwargs):
+    bot: Bot = dialog_manager.middleware_data["bot"]
+    l10n: FluentLocalization = dialog_manager.middleware_data["l10n"]
+    repo: Repo = dialog_manager.middleware_data["repo"]
+    film_id: int = dialog_manager.dialog_data["film_id"]
+
+    film = await repo.get_film(film_id)
+    if not film:
+        return
+
+    return {
+        "poster": film.poster_url.unicode_string(),
+        "title": film.name_ru or film.name_en,
+        "rating": film.rating or "0.0",
+        "year": fluent_number(film.year, useGrouping=False),
+        "genres": ", ".join(film.genres),
+        "description": film.description,
+        "share_url": await create_start_link(bot, film.film_id),
+        "links": [
+            (
+                id_,
+                l10n.format_value("film-url-button-text", dict(title=source.title)),
+                source.url.unicode_string(),
+            )
+            for id_, source in enumerate(film.source)
+        ]
+        if film.source
+        else [],
+    }
+
+
 async def search_films(
-    m: Message,
+    manager: BgManager,
     l10n: FluentLocalization,
     pool: AsyncEngine,
     search: Search,
 ):
-    async with ChatActionSender.typing(bot=m.bot, chat_id=m.chat.id):
+    async with ChatActionSender.typing(bot=manager.bot, chat_id=manager.chat.id):
         async with pool.connect() as conn:
             repo = Repo(conn)
             players_conf = [x.title for x in await repo.list_players() if x.is_active]
@@ -68,15 +134,13 @@ async def search_films(
             available_films = await repo.search_films(
                 [film.film_id for film in search.films]
             )
-            films = [
+            search.films = [
                 x
                 for x in search.films
                 if x.film_id in [y.film_id for y in available_films]
             ]
-            await m.edit_text(
-                l10n.format_value("search-message-text", dict(request=search.keyword)),
-                reply_markup=search_kb.get(l10n, films),
-            )
+
+            await manager.update(data={"search": search.model_dump(by_alias=True)})
 
 
 @router.message(F.text)
@@ -84,6 +148,7 @@ async def search_film_handler(
     m: Message,
     l10n: FluentLocalization,
     repo: Repo,
+    dialog_manager: DialogManager,
     pool: AsyncEngine,
     kinopoisk: KinopoiskAPI,
 ):
@@ -94,38 +159,79 @@ async def search_film_handler(
         await m.answer(l10n.format_value("search-not-found-text"))
         return
 
-    msg = await m.answer(l10n.format_value("search-wait-text"))
-    asyncio.create_task(search_films(m=msg, l10n=l10n, pool=pool, search=search))
+    await dialog_manager.start(
+        FilmSG.lst,
+        data={"search": search.model_dump(by_alias=True)},
+        mode=StartMode.RESET_STACK,
+    )
+    bg_manager = dialog_manager.bg()
+    asyncio.create_task(
+        search_films(manager=bg_manager, l10n=l10n, pool=pool, search=search)
+    )
 
 
 @router.callback_query(search_kb.SearchCallback.filter())
 async def film_handler(
     callback: CallbackQuery,
-    callback_data: search_kb.SearchCallback,
-    l10n: FluentLocalization,
-    repo: Repo,
+    select: Select,
+    manager: DialogManager,
+    film_id: str,
 ):
-    await callback.answer()
-    film = await repo.get_film(callback_data.film_id)
-    if not film or not getattr(film, "source", None):
-        await callback.answer(l10n.format_value("film-not-found-text"), show_alert=True)
-        return
+    manager.dialog_data["film_id"] = int(film_id)
+    await manager.next()
 
-    await callback.message.answer_photo(
-        URLInputFile(film.poster_url.unicode_string()),
-        caption=l10n.format_value(
-            "film-message-text",
-            dict(
-                title=film.name_ru or film.name_en,
-                rating=film.rating,
-                year=fluent_number(film.year, useGrouping=False),
-                genres=", ".join(film.genres),
-                description=film.description,
-                share_url=await create_start_link(callback.bot, film.film_id),
+
+films_dialog = Dialog(
+    Window(
+        L10NFormat(
+            "search-wait-text",
+            when=F["start_data"].get("search").is_(None),
+        ),
+        L10NFormat(
+            "search-message-text",
+            when="films",
+        ),
+        ScrollingGroup(
+            Select(
+                Format("{item[1]}"),
+                id="film_select",
+                item_id_getter=itemgetter(0),
+                items="films",
+                on_click=film_handler,
+                when="films",
             ),
+            id="film_sg",
+            width=1,
+            height=10,
+            hide_on_single_page=True,
         ),
-        reply_markup=film_kb.get(
-            l10n=l10n,
-            film=film,
+        getter=get_films,
+        state=FilmSG.lst,
+    ),
+    Window(
+        StaticMedia(url=Format("{poster}")),
+        L10NFormat("film-message-text"),
+        ListGroup(
+            Url(
+                Format("{item[1]}"),
+                url=Format("{item[2]}"),
+            ),
+            id="film_links",
+            item_id_getter=itemgetter(0),
+            items="links",
         ),
-    )
+        Url(
+            L10NFormat("film-share-text"),
+            url=L10NFormat("film-share-url"),
+            id="share",
+        ),
+        Back(L10NFormat("admin-button-back")),
+        getter=get_film_data,
+        state=FilmSG.film,
+    ),
+)
+
+
+router.include_routers(
+    films_dialog,
+)
