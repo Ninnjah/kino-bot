@@ -173,7 +173,7 @@ async def search_film_handler(
     await dialog_manager.start(FilmSG.lst, mode=StartMode.RESET_STACK)
     bg_manager = dialog_manager.bg()
     asyncio.create_task(
-        dialog_search_films(manager=bg_manager, l10n=l10n, pool=pool, search=search)
+        dialog_search_films(manager=bg_manager, pool=pool, search=search)
     )
 
 
