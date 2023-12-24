@@ -21,7 +21,10 @@ from tgbot.handlers import main_router
 from tgbot.middlewares.media_group import AlbumMiddleware
 from tgbot.middlewares.db import DbMiddleware
 from tgbot.middlewares.role import RoleMiddleware
-from tgbot.middlewares.throttling import ThrottlingMiddleware
+from tgbot.middlewares.throttling import (
+    ThrottlingMiddleware,
+    InlineQueryThrottlingMiddleware,
+)
 from tgbot.services.film_api import players
 from tgbot.services.repository import Repo
 
@@ -61,7 +64,6 @@ async def main():
     bot = Bot(
         config.bot_token.get_secret_value(),
         parse_mode="HTML",
-        disable_web_page_preview=True,
     )
     dp = Dispatcher(storage=storage)
 
@@ -73,10 +75,12 @@ async def main():
 
     dp.message.outer_middleware(DbMiddleware(pool))
     dp.callback_query.outer_middleware(DbMiddleware(pool))
+    dp.inline_query.outer_middleware(DbMiddleware(pool))
     dp.message.outer_middleware(RoleMiddleware(config.admin_list))
     dp.callback_query.outer_middleware(RoleMiddleware(config.admin_list))
     dp.message.outer_middleware(ThrottlingMiddleware())
     dp.callback_query.outer_middleware(ThrottlingMiddleware())
+    dp.inline_query.outer_middleware(InlineQueryThrottlingMiddleware(latency=2))
 
     dp.include_routers(main_router)
 

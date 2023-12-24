@@ -53,7 +53,7 @@ async def share_film(
                 "film-message-text",
                 dict(
                     title=film.name_ru or film.name_en,
-                    rating=film.rating,
+                    rating=film.rating or "0.0",
                     year=fluent_number(film.year, useGrouping=False),
                     genres=", ".join(film.genres),
                     description=film.description,

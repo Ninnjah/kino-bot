@@ -2,9 +2,16 @@ import asyncio
 from operator import itemgetter
 
 from aiogram import Bot, Router, F
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import (
+    CallbackQuery,
+    Message,
+    InlineQuery,
+    InlineQueryResultArticle,
+    InputTextMessageContent,
+)
 from aiogram.utils.chat_action import ChatActionSender
 from aiogram.utils.deep_linking import create_start_link
+from aiogram.utils.markdown import hide_link
 
 from aiogram_dialog import DialogManager, Dialog, Window, StartMode
 from aiogram_dialog.manager.bg_manager import BgManager
@@ -20,7 +27,7 @@ from sqlalchemy.ext.asyncio.engine import AsyncEngine
 from kinopoisk_api.api import KinopoiskAPI
 from kinopoisk_api.models.model import FilmSearchResponse as Search
 from tgbot.handlers.user.states.films import FilmSG
-from tgbot.keyboard.inline.user import search_kb
+from tgbot.keyboard.inline.user import search_kb, film_kb
 from tgbot.services.repository import Repo
 from tgbot.services.film_api import players as players_
 from tgbot.services.l10n_dialog import L10NFormat
@@ -85,62 +92,64 @@ async def get_film_data(dialog_manager: DialogManager, **kwargs):
     }
 
 
-async def search_films(
+async def search_films(pool: AsyncEngine, search: Search) -> Search:
+    async with pool.connect() as conn:
+        repo = Repo(conn)
+        players_conf = [x.title for x in await repo.list_players() if x.is_active]
+        players = [x for x in players_ if x.title in players_conf]
+        players_count = len(players)
+
+        available_films = await repo.list_films([x.film_id for x in search.films])
+        needed_films = [
+            x
+            for x in available_films
+            if any(
+                (
+                    any([x.film_id == y.film_id for y in search.films]),
+                    len(x.source) < players_count if x.source else False,
+                )
+            )
+        ]
+        needed_films += [
+            x
+            for x in search.films
+            if x.film_id not in [y.film_id for y in needed_films]
+        ]
+        await repo.add_film(search.films)
+
+        for player in players:
+            needed_source = [
+                x
+                for x in needed_films
+                if not getattr(x, "source", None)
+                or player.title not in [y.title for y in x.source]
+            ]
+
+            sources = await player.get_bunch_source(needed_source)
+            available_films += [
+                x for x in search.films if x.film_id in [y.film_id for y in sources]
+            ]
+            if sources:
+                await repo.add_source(sources)
+
+        available_films = await repo.search_films(
+            [film.film_id for film in search.films]
+        )
+        search.films = [
+            x for x in search.films if x.film_id in [y.film_id for y in available_films]
+        ]
+
+        return search
+
+
+async def dialog_search_films(
     manager: BgManager,
-    l10n: FluentLocalization,
     pool: AsyncEngine,
     search: Search,
 ):
     async with ChatActionSender.typing(bot=manager.bot, chat_id=manager.chat.id):
-        async with pool.connect() as conn:
-            repo = Repo(conn)
-            players_conf = [x.title for x in await repo.list_players() if x.is_active]
-            players = [x for x in players_ if x.title in players_conf]
-            players_count = len(players)
-
-            available_films = await repo.list_films([x.film_id for x in search.films])
-            needed_films = [
-                x
-                for x in available_films
-                if any(
-                    (
-                        any([x.film_id == y.film_id for y in search.films]),
-                        len(x.source) < players_count if x.source else False,
-                    )
-                )
-            ]
-            needed_films += [
-                x
-                for x in search.films
-                if x.film_id not in [y.film_id for y in needed_films]
-            ]
-            await repo.add_film(search.films)
-
-            for player in players:
-                needed_source = [
-                    x
-                    for x in needed_films
-                    if not getattr(x, "source", None)
-                    or player.title not in [y.title for y in x.source]
-                ]
-
-                sources = await player.get_bunch_source(needed_source)
-                available_films += [
-                    x for x in search.films if x.film_id in [y.film_id for y in sources]
-                ]
-                if sources:
-                    await repo.add_source(sources)
-
-            available_films = await repo.search_films(
-                [film.film_id for film in search.films]
-            )
-            search.films = [
-                x
-                for x in search.films
-                if x.film_id in [y.film_id for y in available_films]
-            ]
-
-            await manager.update(data={"search": search.model_dump(by_alias=True)})
+        search = await search_films(pool, search)
+    await manager.update(data={"search": search.model_dump(by_alias=True)})
 
 
 @router.message(F.text)
@@ -162,7 +171,7 @@ async def search_film_handler(
     await dialog_manager.start(FilmSG.lst, mode=StartMode.RESET_STACK)
     bg_manager = dialog_manager.bg()
     asyncio.create_task(
-        search_films(manager=bg_manager, l10n=l10n, pool=pool, search=search)
+        dialog_search_films(manager=bg_manager, l10n=l10n, pool=pool, search=search)
     )
 
 
@@ -175,6 +184,62 @@ async def film_handler(
 ):
     manager.dialog_data["film_id"] = int(film_id)
     await manager.next()
+
+
+@router.inline_query()
+async def inline_film_handler(
+    inline_query: InlineQuery,
+    l10n: FluentLocalization,
+    repo: Repo,
+    pool: AsyncEngine,
+    kinopoisk: KinopoiskAPI,
+):
+    if not inline_query.query:
+        return
+    search = await kinopoisk.films.search_by_keyword(inline_query.query)
+    if not search:
+        await inline_query.answer(
+            l10n.format_value("search-not-found-text"), is_personal=True
+        )
+        return
+
+    search = await search_films(pool, search)
+    films = await repo.list_films([film.film_id for film in search.films])
+
+    results = []
+    for film in films:
+        results.append(
+            InlineQueryResultArticle(
+                id=str(film.film_id),
+                title=l10n.format_value(
+                    "search-button-text",
+                    dict(
+                        title=film.name_ru or film.name_en,
+                        rating=film.rating if film.rating != "None" else "0.0",
+                        year=fluent_number(film.year, useGrouping=False),
+                    ),
+                ),
+                description=film.description,
+                thumbnail_url=film.poster_url_preview.unicode_string(),
+                input_message_content=InputTextMessageContent(
+                    message_text=hide_link(film.poster_url.unicode_string())
+                    + l10n.format_value(
+                        "film-message-text",
+                        dict(
+                            title=film.name_ru or film.name_en,
+                            rating=film.rating or "0.0",
+                            year=fluent_number(film.year, useGrouping=False),
+                            genres=", ".join(film.genres),
+                            description=film.description,
+                        ),
+                    ),
+                    parse_mode="HTML",
+                ),
+                reply_markup=film_kb.get(l10n=l10n, film=film),
+            )
+        )
+
+    await inline_query.answer(results, is_personal=True)
 
 
 films_dialog = Dialog(
