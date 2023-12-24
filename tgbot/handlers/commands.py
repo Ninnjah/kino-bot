@@ -3,15 +3,21 @@ from aiogram.filters import Command, CommandStart, CommandObject
 from aiogram.types import Message, URLInputFile
 from aiogram.utils.deep_linking import create_start_link
 
-from aiogram_dialog import DialogManager
+from aiogram_dialog import DialogManager, StartMode
 
 from fluent.runtime import FluentLocalization
 from fluent.runtime.types import fluent_number
 
+from tgbot.handlers.admin.states.menu import AdminMenuSG
 from tgbot.keyboard.inline.user import film_kb
 from tgbot.services.repository import Repo
 
 router = Router(name=__name__)
+
+
+@router.message(Command("admin"))
+async def admin_start_handler(m: Message, dialog_manager: DialogManager):
+    await dialog_manager.start(AdminMenuSG.main, mode=StartMode.RESET_STACK)
 
 
 @router.message(CommandStart(deep_link=True))

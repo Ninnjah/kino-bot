@@ -62,9 +62,9 @@ players_dialog = Dialog(
             hide_on_single_page=True,
             id="scroll_with_pager",
         ),
-        Cancel(text=L10NFormat("admin-button-close")),
+        Cancel(L10NFormat("admin-button-back")),
         getter=list_players,
-        state=PlayerConfigSG.main,
+        state=PlayerConfigSG.lst,
     ),
     on_start=start_config,
 )

@@ -1,6 +1,6 @@
 admin-start-text = Добро пожаловать в панель администратора!
 user-start-text = Добро пожаловать!
-admin-button-back = Назад
+admin-button-back = ⬅️ Назад ⬅️
 admin-button-yes = Да
 admin-button-no = Нет
 admin-button-cancel = Отмена

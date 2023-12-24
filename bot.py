@@ -17,7 +17,7 @@ from kinopoisk_api.api import KinopoiskAPI
 
 from tgbot.config_reader import config
 from tgbot.fluent_loader import get_fluent_localization
-from tgbot.handlers import admin, user
+from tgbot.handlers import main_router
 from tgbot.middlewares.media_group import AlbumMiddleware
 from tgbot.middlewares.db import DbMiddleware
 from tgbot.middlewares.role import RoleMiddleware
@@ -78,10 +78,7 @@ async def main():
     dp.message.outer_middleware(ThrottlingMiddleware())
     dp.callback_query.outer_middleware(ThrottlingMiddleware())
 
-    dp.include_routers(
-        admin.router,
-        user.router,
-    )
+    dp.include_routers(main_router)
 
     setup_dialogs(dp)
 

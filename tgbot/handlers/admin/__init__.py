@@ -5,8 +5,8 @@ from tgbot.filters.role import IsAdminFilter
 
 from . import start
 from . import admins
-from . import players
 from . import users
+from . import players
 
 __all__ = ("router",)
 
@@ -19,7 +19,7 @@ router.callback_query.filter(
 
 router.include_routers(
     start.router,
-    users.router,
     admins.router,
+    users.router,
     players.router,
 )

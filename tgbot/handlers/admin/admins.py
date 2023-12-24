@@ -192,6 +192,7 @@ admin_list_dialog = Dialog(
             id="admin_add",
             on_click=admin_add_start,
         ),
+        Cancel(L10NFormat("admin-button-back")),
         getter=get_admins,
         state=AdminSG.lst,
     ),

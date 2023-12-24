@@ -1,64 +1,42 @@
-from typing import Sequence
-
 from aiogram import Router
-from aiogram.fsm.context import FSMContext
-from aiogram.filters import Command
-from aiogram.types import Message
 
-from aiogram_dialog import DialogManager, StartMode
+from aiogram_dialog import Dialog, Window
+from aiogram_dialog.widgets.kbd import Column, Start
 
-from fluent.runtime import FluentLocalization
-
+from tgbot.handlers.admin.states.menu import AdminMenuSG
 from tgbot.handlers.admin.states.admins import AdminSG
 from tgbot.handlers.admin.states.users import UserSG
 from tgbot.handlers.admin.states.players import PlayerConfigSG
-from tgbot.keyboard.reply.admin import main_kb
-from tgbot.filters.text import TextFilter
-from tgbot.filters.role import IsAdminFilter, IsSudoFilter
-from tgbot.models.role import UserRole
-from tgbot.services.repository import Repo
+from tgbot.filters.dialog.role import IsSudoFilter
+from tgbot.services.l10n_dialog import L10NFormat
 
 router = Router(name=__name__)
 
 
-@router.message(Command("start"))
-async def start_handler(
-    m: Message, l10n: FluentLocalization, repo: Repo, dialog_manager: DialogManager
-):
-    await dialog_manager.reset_stack()
-    await repo.add_user(
-        user_id=m.from_user.id,
-        firstname=m.from_user.first_name,
-        lastname=m.from_user.last_name,
-        username=m.from_user.username,
-    )
-    await m.answer(l10n.format_value("user-start-text"))
+admin_menu_dialog = Dialog(
+    Window(
+        L10NFormat("admin-start-text"),
+        Column(
+            Start(
+                L10NFormat("admin-button-list-admins"),
+                id="admin_lst",
+                state=AdminSG.lst,
+                when=IsSudoFilter(),
+            ),
+            Start(
+                L10NFormat("admin-button-list-users"),
+                id="user_lst",
+                state=UserSG.lst,
+            ),
+            Start(
+                L10NFormat("admin-button-list-players"),
+                id="player_lst",
+                state=PlayerConfigSG.lst,
+            ),
+        ),
+        state=AdminMenuSG.main,
+    ),
+)
 
 
-@router.message(Command("admin"))
-async def admin_handler(
-    m: Message,
-    l10n: FluentLocalization,
-    state: FSMContext,
-    dialog_manager: DialogManager,
-    roles: Sequence[UserRole],
-):
-    await dialog_manager.reset_stack()
-    await m.answer(
-        l10n.format_value("admin-start-text"), reply_markup=main_kb.get(l10n, roles)
-    )
-
-
-@router.message(TextFilter("admin-button-list-admins"), IsSudoFilter())
-async def list_admins(m: Message, dialog_manager: DialogManager):
-    await dialog_manager.start(AdminSG.lst, mode=StartMode.RESET_STACK)
-
-
-@router.message(TextFilter("admin-button-list-users"), IsAdminFilter())
-async def list_users(m: Message, dialog_manager: DialogManager):
-    await dialog_manager.start(UserSG.lst, mode=StartMode.RESET_STACK)
-
-
-@router.message(TextFilter("admin-button-list-players"))
-async def list_handler(m: Message, dialog_manager: DialogManager):
-    await dialog_manager.start(PlayerConfigSG.main, mode=StartMode.RESET_STACK)
+router.include_routers(admin_menu_dialog)

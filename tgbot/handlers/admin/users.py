@@ -15,6 +15,7 @@ from aiogram_dialog.widgets.kbd import (
     NextPage,
     LastPage,
     Button,
+    Cancel,
 )
 
 from openpyxl import Workbook
@@ -27,6 +28,36 @@ logger = logging.getLogger(__name__)
 router = Router(name=__name__)
 
 PAGE_SIZE = 20
+
+
+async def get_admin_id(dialog_manager: DialogManager, **kwargs):
+    admin_id = dialog_manager.dialog_data.get("admin_id")
+    return {"admin_id": str(admin_id)}
+
+
+async def get_admin(dialog_manager: DialogManager, repo: Repo, **kwargs):
+    admin_id = dialog_manager.dialog_data.get(
+        "admin_id"
+    ) or dialog_manager.start_data.get("admin_id")
+    admin = await repo.get_admin(admin_id)
+
+    sudo_checkbox = dialog_manager.find("admin_sudo_ch")
+    if sudo_checkbox:
+        await sudo_checkbox.set_checked(admin.sudo)
+
+    return {
+        "admin_id": str(admin.id),
+        "sudo": admin.sudo,
+        "created_on": admin.created_on.strftime("%Y.%m.%d %H:%M"),
+        "updated_on": admin.updated_on.strftime("%Y.%m.%d %H:%M"),
+    }
+
+
+async def get_admins(dialog_manager: DialogManager, repo: Repo, **kwargs):
+    admins = await repo.list_admins()
+    return {
+        "admins": [(admin.id, admin, "👑 " if admin.sudo else "") for admin in admins]
+    }
 
 
 async def get_users(dialog_manager: DialogManager, repo: Repo, **kwargs):
@@ -110,6 +141,7 @@ user_list_dialog = Dialog(
             id="export",
             on_click=export_users,
         ),
+        Cancel(L10NFormat("admin-button-back")),
         getter=get_users,
         state=UserSG.lst,
     ),
