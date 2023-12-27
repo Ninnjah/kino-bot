@@ -3,8 +3,10 @@ user-start-text = Привет! Отправь мне название филь�
 admin-button-back = ⬅️ Назад ⬅️
 admin-button-yes = Да
 admin-button-no = Нет
+admin-button-next = Дальше
 admin-button-cancel = Отмена
 admin-button-close = Закрыть
+admin-button-skip = Пропустить
 
 # User list
 admin-users-list = Список пользователей:
@@ -54,6 +56,18 @@ admin-add-admin-confirm = Вы уверены что хотите добавит
 # Sources
 admin-button-list-players = Источники
 admin-players-list = Вот список доступных источников
+
+# Messages
+admin-button-send-message = Рассылка
+admin-button-send-again = Отправить заного
+admin-button-send-preview = Посмотреть сообщение
+admin-message-media-request-text = Отправьте фото/видео, которые будут прикреплены к сообщению
+admin-message-media-preview-text = Эти медиа будут прикреплены к сообщению (все сразу, без кнопок)
+admin-message-request-text = Отправьте сообщение, которое хотите отправить пользователям
+admin-message-preview-text = {$text}
+admin-message-edit-media = Изменить медиа
+admin-message-edit-text = Изменить текст
+admin-button-cancel-edit = Отменить редактирование
 
 close-button-text = Закрыть
 user-start-text = Чтобы найти фильм просто отправьте мне его название!

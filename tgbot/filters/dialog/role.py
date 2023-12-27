@@ -19,7 +19,9 @@ class RoleFilter(Predicate):
         widget: Whenable,
         dialog_manager: DialogManager,
     ) -> bool:
-        roles = dialog_manager.middleware_data["roles"]
+        roles = dialog_manager.middleware_data.get("roles")
+        if not roles:
+            return True
         return any((role for role in roles if role in self.roles))
 
 

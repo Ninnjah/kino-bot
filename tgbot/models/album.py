@@ -41,11 +41,13 @@ class Album(BaseModel):
     @property
     def as_media_group(self) -> List[InputMedia]:
         group = [
-            INPUT_TYPES[media_type](type=media_type, media=media.file_id)
+            INPUT_TYPES[media_type](
+                type=media_type,
+                media=media.file_id,
+                caption=self.caption if i == 0 else None,
+            )
             for media_type in self.media_types
-            for media in getattr(self, media_type)
+            for i, media in enumerate(getattr(self, media_type))
         ]
-        if group:
-            group[0].caption = self.caption
 
         return group

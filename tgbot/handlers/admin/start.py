@@ -7,6 +7,7 @@ from tgbot.handlers.admin.states.menu import AdminMenuSG
 from tgbot.handlers.admin.states.admins import AdminSG
 from tgbot.handlers.admin.states.users import UserSG
 from tgbot.handlers.admin.states.players import PlayerConfigSG
+from tgbot.handlers.admin.states.messages import MessageSG
 from tgbot.filters.dialog.role import IsSudoFilter
 from tgbot.services.l10n_dialog import L10NFormat
 
@@ -32,6 +33,11 @@ admin_menu_dialog = Dialog(
                 L10NFormat("admin-button-list-players"),
                 id="player_lst",
                 state=PlayerConfigSG.lst,
+            ),
+            Start(
+                L10NFormat("admin-button-send-message"),
+                id="message_send",
+                state=MessageSG.main,
             ),
         ),
         Cancel(L10NFormat("admin-button-close")),

@@ -7,6 +7,7 @@ from . import start
 from . import admins
 from . import users
 from . import players
+from . import messages
 
 __all__ = ("router",)
 
@@ -22,4 +23,5 @@ router.include_routers(
     admins.router,
     users.router,
     players.router,
+    messages.router,
 )
