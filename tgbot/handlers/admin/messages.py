@@ -108,58 +108,6 @@ async def send_preview(callback: CallbackQuery, button: Button, manager: DialogM
         await callback.message.answer(text)
 
 
-async def start_send(
-    callback: CallbackQuery,
-    l10n: FluentLocalization,
-    manager: BgManager,
-    user_list: Sequence[int],
-    message: dict,
-):
-    bot = manager.bot
-    for user_id in user_list:
-        with suppress(TelegramBadRequest, TelegramForbiddenError):
-            if message["media"]:
-                await bot.send_media_group(chat_id=user_id, media=message["media"])
-            else:
-                await bot.send_message(chat_id=user_id, text=message["text"])
-
-    await callback.answer(
-        l10n.format_value("admin-message-sent-notify"), show_alert=True
-    )
-    await manager.done()
-
-
-async def send_message(callback: CallbackQuery, button: Button, manager: DialogManager):
-    repo: Repo = manager.middleware_data["repo"]
-    l10n: FluentLocalization = manager.middleware_data["l10n"]
-    users = [user.id for user in await repo.list_users()]
-    media_list = manager.dialog_data.get("media", [])
-    text = manager.dialog_data.get("text")
-
-    message = {
-        "media": [
-            INPUT_TYPES[media[0]](
-                type=media[0],
-                media=media[1],
-                caption=text if i == 0 else None,
-            )
-            for i, media in enumerate(media_list)
-        ],
-        "text": text,
-    }
-    bg = manager.bg()
-
-    asyncio.create_task(
-        start_send(
-            callback=callback,
-            l10n=l10n,
-            manager=bg,
-            user_list=users,
-            message=message,
-        )
-    )
-
-
 post_dialog = Dialog(
     Window(
         L10NFormat("admin-message-media-request-text"),
