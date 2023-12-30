@@ -68,6 +68,7 @@ admin-message-preview-text = {$text}
 admin-message-edit-media = Изменить медиа
 admin-message-edit-text = Изменить текст
 admin-button-cancel-edit = Отменить редактирование
+admin-messages-sent = Пост был успешно отправлен!
 
 close-button-text = Закрыть
 user-start-text = Чтобы найти фильм просто отправьте мне его название!

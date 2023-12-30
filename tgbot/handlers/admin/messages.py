@@ -108,6 +108,35 @@ async def send_preview(callback: CallbackQuery, button: Button, manager: DialogM
         await callback.message.answer(text)
 
 
+async def send_message(callback: CallbackQuery, button: Button, manager: DialogManager):
+    repo: Repo = manager.middleware_data["repo"]
+    l10n: FluentLocalization = manager.middleware_data["l10n"]
+    bot = callback.bot
+
+    user_list = await repo.list_users()
+    media_list = manager.dialog_data.get("media", [])
+    text = manager.dialog_data.get("text")
+
+    for user in user_list:
+        if media_list:
+            await bot.send_media_group(
+                chat_id=user.id,
+                media=[
+                    INPUT_TYPES[media[0]](
+                        type=media[0],
+                        media=media[1],
+                        caption=text if i == 0 else None,
+                    )
+                    for i, media in enumerate(media_list)
+                ],
+            )
+        else:
+            await bot.send_message(chat_id=user.id, text=text)
+
+    await callback.answer(l10n.format_value("admin-messages-sent"), show_alert=True)
+    await manager.done()
+
+
 post_dialog = Dialog(
     Window(
         L10NFormat("admin-message-media-request-text"),
@@ -180,7 +209,7 @@ post_dialog = Dialog(
         Button(
             L10NFormat("admin-button-send"),
             id="message_send",
-            on_click=send_message,
+            # on_click=send_message,
         ),
         Cancel(L10NFormat("admin-button-cancel")),
         state=MessageSG.preview,
