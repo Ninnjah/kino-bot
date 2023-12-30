@@ -90,4 +90,13 @@ async def yn_handler(
         l10n.format_value("user-yes-message"),
     ]
 
-    await m.answer(random.choice(messages))
+    await m.answer(l10n.format_value(random.choice(messages)))
+
+
+@router.message(Command("chance"))
+async def chance_handler(
+    m: Message, l10n: FluentLocalization, dialog_manager: DialogManager
+):
+    await m.answer(
+        l10n.format_value("user-percent-message", dict(percent=random.randint(0, 100)))
+    )
