@@ -209,7 +209,7 @@ post_dialog = Dialog(
         Button(
             L10NFormat("admin-button-send"),
             id="message_send",
-            # on_click=send_message,
+            on_click=send_message,
         ),
         Cancel(L10NFormat("admin-button-cancel")),
         state=MessageSG.preview,
