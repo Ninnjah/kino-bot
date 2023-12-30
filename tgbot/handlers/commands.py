@@ -28,7 +28,6 @@ async def share_film(
     repo: Repo,
     dialog_manager: DialogManager,
 ):
-    await dialog_manager.reset_stack()
     await repo.add_user(
         user_id=m.from_user.id,
         firstname=m.from_user.first_name,
@@ -71,7 +70,6 @@ async def share_film(
 async def start_handler(
     m: Message, l10n: FluentLocalization, repo: Repo, dialog_manager: DialogManager
 ):
-    await dialog_manager.reset_stack()
     await repo.add_user(
         user_id=m.from_user.id,
         firstname=m.from_user.first_name,
