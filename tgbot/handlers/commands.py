@@ -1,3 +1,5 @@
+import random
+
 from aiogram import Router
 from aiogram.filters import Command, CommandStart, CommandObject
 from aiogram.types import Message, URLInputFile
@@ -77,3 +79,15 @@ async def start_handler(
         username=m.from_user.username,
     )
     await m.answer(l10n.format_value("user-start-text"))
+
+
+@router.message(Command("yn"))
+async def yn_handler(
+    m: Message, l10n: FluentLocalization, dialog_manager: DialogManager
+):
+    messages = [
+        l10n.format_value("user-no-message"),
+        l10n.format_value("user-yes-message"),
+    ]
+
+    await m.answer(random.choice(messages))
