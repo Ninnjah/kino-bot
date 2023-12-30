@@ -61,6 +61,7 @@ admin-players-list = Вот список доступных источников
 admin-button-send-message = Рассылка
 admin-button-send-again = Отправить заного
 admin-button-send-preview = Посмотреть сообщение
+admin-button-send = Отправить пост
 admin-message-media-request-text = Отправьте фото/видео, которые будут прикреплены к сообщению
 admin-message-media-preview-text = Эти медиа будут прикреплены к сообщению (все сразу, без кнопок)
 admin-message-request-text = Отправьте сообщение, которое хотите отправить пользователям
