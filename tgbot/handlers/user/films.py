@@ -256,7 +256,11 @@ films_dialog = Dialog(
         ),
         L10NFormat(
             "search-message-text",
-            when="films",
+            when=F["films"],
+        ),
+        L10NFormat(
+            "search-not-found-text",
+            when=~F["films"],
         ),
         ScrollingGroup(
             Select(
