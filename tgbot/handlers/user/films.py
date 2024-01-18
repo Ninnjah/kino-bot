@@ -260,7 +260,7 @@ films_dialog = Dialog(
         ),
         L10NFormat(
             "search-not-found-text",
-            when=~F["films"],
+            when=~F["films"] & F["dialog_data"].get("search"),
         ),
         ScrollingGroup(
             Select(
