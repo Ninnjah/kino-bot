@@ -77,6 +77,7 @@ yesno-button-text-yes = Да
 yesno-button-text-no = Нет
 cancel-button-text = Отмена
 search-wait-text = Подожди пожалуйста, я ищу фильм
+search-not-found-text = Я не нашел этот фильм
 search-button-text = {$title} ({$year}) ⭐️{$rating}
 search-message-text = Вот список доступных фильмов по запросу "{$request}"
 search-not-found-text = Похоже, что по вашему запросу ничего не найдено
