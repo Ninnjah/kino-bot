@@ -1,8 +1,8 @@
 import random
 
-from aiogram import Router
+from aiogram import Bot, Router
 from aiogram.filters import Command, CommandStart, CommandObject
-from aiogram.types import Message, URLInputFile
+from aiogram.types import Message, URLInputFile, MessageReactionUpdated
 from aiogram.utils.deep_linking import create_start_link
 
 from aiogram_dialog import DialogManager, StartMode
@@ -15,6 +15,14 @@ from tgbot.keyboard.inline.user import film_kb
 from tgbot.services.repository import Repo
 
 router = Router(name=__name__)
+
+POSITIVE_EMOJI = "🍌🩷❤️🧡💛💚🩵💙💜🖤🩶🤍🤎❤️‍🔥❣️💕💞💓💗💖💘💝💟😀😃😄🤩🥳😍🥰😘😉🙂🥺👏🙌🤝👍😻😽🫶😺⭐️🌟✨💫"
+
+
+@router.message_reaction()
+async def reaction_handler(mr: MessageReactionUpdated, bot: Bot, l10n: FluentLocalization):
+    if any(reaction.emoji in POSITIVE_EMOJI for reaction in mr.new_reaction):
+        await bot.send_message(mr.chat.id, l10n.format_value("user-reaction-positive"))
 
 
 @router.message(Command("admin"))

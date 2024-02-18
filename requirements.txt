@@ -1,4 +1,4 @@
-aiogram==3.0.0
+aiogram==3.4.1
 aiogram-dialog==2.1.0
 alembic==1.12.1 
 SQLAlchemy==2.0.20

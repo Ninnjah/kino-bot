@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 from aiogram import Bot, Dispatcher
+from aiogram.client.bot import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
 
@@ -63,7 +64,7 @@ async def main():
     pool = await create_pool(config.database_url.unicode_string())
     bot = Bot(
         config.bot_token.get_secret_value(),
-        parse_mode="HTML",
+        default=DefaultBotProperties(parse_mode="html"),
     )
     dp = Dispatcher(storage=storage)
 
