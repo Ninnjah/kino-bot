@@ -88,7 +88,7 @@ class VoidboostPlayer(BasePlayer):
         self, client: AsyncClient, url: str, film: Film
     ) -> Optional[Source]:
         res = await self._request_get(client, url)
-        if res.status_code == 200:
+        if res and res.status_code == 200:
             return Source(
                 title=self.title, film_id=film.film_id, url=str(res.request.url)
             )
@@ -133,7 +133,7 @@ class IframePlayer(BasePlayer):
         self, client: AsyncClient, url: str, film: Film
     ) -> Optional[Source]:
         res = await self._request_get(client, url, params={"kp": film.film_id})
-        if res.status_code == 200:
+        if res and res.status_code == 200:
             data = res.json()
             source_url = await self._parse_url(data)
             if not source_url:
@@ -182,7 +182,7 @@ class AllohaPlayer(BasePlayer):
         res = await self._request_get(
             client, url, params={"token": self.token, "kp": film.film_id}
         )
-        if res.status_code == 200:
+        if res and res.status_code == 200:
             data = res.json()
             if data["status"] != "success":
                 return
@@ -231,7 +231,7 @@ class BhceshPlayer(BasePlayer):
         res = await self._request_get(
             client, url, params={"token": self.token, "kinopoisk_id": film.film_id}
         )
-        if res.status_code == 200:
+        if res and res.status_code == 200:
             data = res.json()
             if data.get("status") == 404:
                 return
@@ -280,7 +280,7 @@ class CollapsPlayer(BasePlayer):
         res = await self._request_get(
             client, url, params={"token": self.token, "kinopoisk_id": film.film_id}
         )
-        if res.status_code == 200:
+        if res and res.status_code == 200:
             data = res.json()
             if data["total"] == 0:
                 return
