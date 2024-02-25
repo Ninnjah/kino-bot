@@ -54,3 +54,16 @@ def split_message(msg: str, *, with_photo: bool = False) -> list[str]:
                     msg = msg[max_msg_length:]
 
     return parts
+
+
+def short_message(msg: str, *, with_photo: bool = False, max_length: int = 0) -> str:
+    end = "..."
+    if max_length:
+        length = max_length - len(end)
+    else:
+        length = MAX_CAPTION_LENGTH - len(end) if with_photo else MAX_MSG_LENGTH - len(end)
+
+    if len(msg) > length:
+        return msg[:max_length] + end
+    else:
+        return msg

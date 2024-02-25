@@ -31,6 +31,7 @@ from tgbot.keyboard.inline.user import search_kb, film_kb
 from tgbot.services.repository import Repo
 from tgbot.services.film_api import players as players_
 from tgbot.services.l10n_dialog import L10NFormat
+from tgbot.services.parts import short_message
 
 router = Router(name=__name__)
 
@@ -79,7 +80,7 @@ async def get_film_data(dialog_manager: DialogManager, **kwargs):
         "rating": film.rating or "0.0",
         "year": fluent_number(film.year, useGrouping=False) if film.year else "",
         "genres": ", ".join(film.genres),
-        "description": film.description,
+        "description": short_message(film.description, max_length=750),
         "share_url": await create_start_link(bot, film.film_id),
         "links": [
             (
